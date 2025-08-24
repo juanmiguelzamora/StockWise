@@ -1,0 +1,79 @@
+# ----------------------------------------------------------------------
+# Global default
+# ----------------------------------------------------------------------
+* text=auto
+
+# ----------------------------------------------------------------------
+# Flutter / Dart (mobile/)
+# ----------------------------------------------------------------------
+*.dart        text eol=lf
+*.yaml        text eol=lf
+
+# Android / Kotlin / Gradle
+*.kt          text eol=lf
+*.kts         text eol=lf
+*.gradle      text eol=lf
+*.properties  text eol=lf
+
+# iOS / macOS / Swift
+*.swift       text eol=lf
+*.plist       text eol=lf
+
+# ----------------------------------------------------------------------
+# Web Frontend (React + Tailwind in web/frontend)
+# ----------------------------------------------------------------------
+*.js          text eol=lf
+*.jsx         text eol=lf
+*.ts          text eol=lf
+*.tsx         text eol=lf
+*.json        text eol=lf diff=json
+*.css         text eol=lf
+*.scss        text eol=lf
+*.html        text eol=lf
+
+# Lockfiles
+package-lock.json text eol=lf
+yarn.lock text eol=lf
+pnpm-lock.yaml text eol=lf
+
+# ----------------------------------------------------------------------
+# Web Backend (Django in web/backend)
+# ----------------------------------------------------------------------
+*.py          text eol=lf
+*.html        text eol=lf
+*.txt         text eol=lf
+*.cfg         text eol=lf
+*.ini         text eol=lf
+*.sql         text eol=lf
+*.env         text eol=lf export-ignore
+
+# ----------------------------------------------------------------------
+# Config & Docs
+# ----------------------------------------------------------------------
+*.md          text eol=lf diff=markdown
+*.gitignore   text eol=lf
+*.editorconfig text eol=lf
+*.gitattributes text eol=lf
+Dockerfile    text eol=lf
+*.yml         text eol=lf
+*.sh          text eol=lf
+*.bat         text eol=crlf
+
+# ----------------------------------------------------------------------
+# Binary files (keep exact)
+# ----------------------------------------------------------------------
+*.png         binary
+*.jpg         binary
+*.jpeg        binary
+*.gif         binary
+*.ico         binary
+*.ttf         binary
+*.otf         binary
+*.woff        binary
+*.woff2       binary
+*.mp4         binary
+*.mp3         binary
+*.zip         binary
+*.jar         binary
+*.db          binary
+*.sqlite3     binary

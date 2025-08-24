@@ -1,0 +1,40 @@
+# VSCode / IDE settings
+.vscode/
+.idea/
+*.iml
+
+# Flutter / Dart build artifacts
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.dart_tool/
+pubspec.lock
+
+# Android build
+**/android/.gradle/
+**/android/app/build/
+**/android/local.properties
+
+# iOS / macOS build
+**/ios/Pods/
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/Flutter.framework
+**/macos/Flutter/GeneratedPluginRegistrant.swift
+
+# Node (frontend)
+node_modules/
+dist/
+.next/
+out/
+
+# Python/Django
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+db.sqlite3
+
+# Secrets
+*.env
+google-services.json
+GoogleService-Info.plist
