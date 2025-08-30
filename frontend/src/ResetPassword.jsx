@@ -26,7 +26,7 @@ export default function ResetPassword() {
 
     try {
   const res = await fetch(
-  "http://192.168.0.100:8000/api/v1/auth/password-reset-confirm/",
+  "http://172.16.3.234/api/v1/users/password-reset-confirm/",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
