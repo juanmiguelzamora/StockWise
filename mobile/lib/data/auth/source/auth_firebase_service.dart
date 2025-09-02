@@ -10,6 +10,7 @@ abstract class AuthFireseService {
   Future<Either> forgotPassword(String email);
   Future<bool> isLoggedIn();
   Future<Either> getUser();
+  Future<Either> logout();
 }
 
 class AuthFirebaseServiceImpl extends AuthFireseService {
@@ -67,7 +68,7 @@ class AuthFirebaseServiceImpl extends AuthFireseService {
   }
 
   @override
-   Future<Either> forgotPassword(String email) async {
+  Future<Either> forgotPassword(String email) async {
     try {
       await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
       return const Right('Password reset email is sent');
@@ -85,7 +86,7 @@ class AuthFirebaseServiceImpl extends AuthFireseService {
       return const Left('An unexpected error occurred.');
     }
   }
-  
+
   @override
   Future<bool> isLoggedIn() async {
     if (FirebaseAuth.instance.currentUser != null) {
@@ -94,20 +95,29 @@ class AuthFirebaseServiceImpl extends AuthFireseService {
       return false;
     }
   }
-  
 
   @override
-   Future<Either> getUser() async {
-     try {
-       var currentUser = FirebaseAuth.instance.currentUser;
-       var userData = await FirebaseFirestore.instance
+  Future<Either> getUser() async {
+    try {
+      var currentUser = FirebaseAuth.instance.currentUser;
+      var userData = await FirebaseFirestore.instance
           .collection('Users')
           .doc(currentUser!.uid)
-           .get().then((value) => value.data());
-       return Right(userData);
-     } catch (e) {
-       return Left('Failed to fetch user data: ${e.toString()}');
-     }
-   }
+          .get()
+          .then((value) => value.data());
+      return Right(userData);
+    } catch (e) {
+      return Left('Failed to fetch user data: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<Either> logout() async {
+    try {
+      await FirebaseAuth.instance.signOut();
+      return const Right('User logged out successfully');
+    } catch (e) {
+      return Left('Failed to log out: ${e.toString()}');
+    }
+  }
 }
- 
