@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stock_wise/screens/bottom.nav.dart';
 import 'package:stock_wise/screens/login.dart';
 
 class Signup extends StatefulWidget {
@@ -206,13 +207,17 @@ class _Signup extends State<Signup> {
           Center(
             heightFactor: 2,
             child: SizedBox(
-              width: 380,
+              width: 320,
               height: 50,
               child: ElevatedButton(
                 onPressed: () {
 
 
                   //Signup Logic where to go//
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const BottomNav()),
+                  );
 
 
 
@@ -239,7 +244,7 @@ class _Signup extends State<Signup> {
               Text(
                 'Already have an account',
                 style: TextStyle(
-                  height: 5,
+                  height: 2,
                   color: Colors.grey,
                   fontSize: 16,
                 ),
@@ -281,8 +286,4 @@ class _Signup extends State<Signup> {
       ),
     );
   }
-
-
-
-
 }
