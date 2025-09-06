@@ -12,3 +12,4 @@ class SigninUseCase implements UseCase<Either,UserSigninReq> {
   }
   
 }
+

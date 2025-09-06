@@ -9,3 +9,4 @@ class IsLoggedInUseCase implements UseCase<bool,dynamic> {
   }
 
 }
+
