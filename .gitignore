@@ -2,6 +2,7 @@
 .vscode/
 .idea/
 *.iml
+.history/
 
 # Flutter / Dart build artifacts
 build/

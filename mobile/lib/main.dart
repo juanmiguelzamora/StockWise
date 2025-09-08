@@ -2,7 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/core/configs/theme/app_theme.dart';
 import 'package:mobile/domain/auth/usecases/is_logged_in.dart';
-import 'package:mobile/firebase_option.dart';
+import 'package:mobile/firebase_options.dart';
 import 'package:mobile/presentation/splash/bloc/splash_cubit.dart';
 import 'package:mobile/presentation/splash/pages/splash.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         theme: AppTheme.appTheme,
         debugShowCheckedModeBanner: false,
-        home: const SplashPage()
+        home: const SplashPage(),
       ),
     );
   }

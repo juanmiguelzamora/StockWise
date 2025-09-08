@@ -6,7 +6,7 @@ import 'package:mobile/common/helper/navigator/app_navigator.dart';
 import 'package:mobile/common/widgets/button/basic_reactive_button.dart';
 import 'package:mobile/data/auth/models/user_signin_req.dart';
 import 'package:mobile/domain/auth/usecases/signin.dart';
-import 'package:mobile/presentation/home/widgets/bottom_nav_page.dart';
+import 'package:mobile/presentation/bottom_nav/pages/bottom_nav_page.dart';
 import 'package:mobile/presentation/auth/pages/forgot_password.dart';
 import 'package:mobile/presentation/auth/pages/signup.dart';
 import 'package:mobile/service_locator.dart';

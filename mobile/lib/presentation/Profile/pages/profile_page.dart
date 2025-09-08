@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile/presentation/Profile/profile_menu_item.dart';
 import '../../../domain/auth/entity/user.dart';
 
 class ProfilePage extends StatelessWidget {
-  final UserEntity profile;
 
-  const ProfilePage({super.key, required this.profile});
+
+  const ProfilePage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -44,13 +45,7 @@ class ProfilePage extends StatelessWidget {
           //   style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           // ), uncomment when username is available
 
-          const SizedBox(height: 4),
-
-          Text(
-            profile.email,
-            style: const TextStyle(color: Colors.grey, fontSize: 14),
-          ),
-
+       
           const SizedBox(height: 20),
 
           Expanded(
