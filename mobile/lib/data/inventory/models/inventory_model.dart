@@ -7,11 +7,13 @@ class InventoryModel extends Inventory {
     required int stockIn,
     required int stockOut,
     required int totalStock,
+    required double averageDailySales,
   }) : super(
           item: item,
           stockIn: stockIn,
           stockOut: stockOut,
           totalStock: totalStock,
+          averageDailySales: averageDailySales,
         );
 
   factory InventoryModel.fromJson(Map<String, dynamic> json) {
@@ -20,6 +22,7 @@ class InventoryModel extends Inventory {
       stockIn: json['stock_in'],
       stockOut: json['stock_out'],
       totalStock: json['total_stock'],
+      averageDailySales: (json['average_daily_sales'] as num).toDouble()
     );
   }
 }

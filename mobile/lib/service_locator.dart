@@ -12,7 +12,9 @@ import 'package:mobile/domain/auth/usecases/signin.dart';
 import 'package:mobile/domain/auth/usecases/signup.dart';
 import 'package:mobile/domain/inventory/repository/inventory_repository.dart';
 import 'package:mobile/domain/inventory/usecases/get_inventory.dart';
-import 'package:mobile/presentation/inventory/inventory_provider.dart';
+import 'package:mobile/domain/inventory/usecases/get_inventory_summary.dart';
+import 'package:mobile/domain/inventory/usecases/get_stock_status.dart';
+import 'package:mobile/presentation/inventory/provider/inventory_provider.dart';
 
 final sl = GetIt.instance;
 
@@ -79,10 +81,21 @@ Future<void> iniatializeServiceLocator() async {
   sl.registerLazySingleton<GetInventory>(
     () => GetInventory(sl<InventoryRepository>()),
   );
+  sl.registerLazySingleton<GetStockStatus>(
+  () => GetStockStatus(),
+);
+
+sl.registerLazySingleton<GetInventorySummary>(
+  () => GetInventorySummary(),
+);
 
   // providers (presentation)
   sl.registerFactory<InventoryProvider>(
-    () => InventoryProvider(sl<GetInventory>()),
-  );
+  () => InventoryProvider(
+    sl<GetInventory>(),
+    sl<GetStockStatus>(),
+    sl<GetInventorySummary>(),
+  ),
+);
 
 }
