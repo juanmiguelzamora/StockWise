@@ -1,12 +1,57 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mobile/common/helper/navigator/app_navigator.dart';
+import 'package:mobile/domain/auth/usecases/is_logged_out.dart';
 import 'package:mobile/presentation/Profile/profile_menu_item.dart';
-import '../../../domain/auth/entity/user.dart';
+import 'package:mobile/presentation/auth/pages/signin.dart';
+import 'package:mobile/service_locator.dart';
+
 
 class ProfilePage extends StatelessWidget {
-
-
   const ProfilePage({super.key});
+
+  Future<void> _confirmLogout(BuildContext context) async {
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Logout'),
+        content: const Text('Are you sure you want to log out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldLogout == true) {
+      _handleLogout(context);
+    }
+  }
+
+  Future<void> _handleLogout(BuildContext context) async {
+    final logoutUseCase = sl<LogoutUseCase>();
+    final result = await logoutUseCase();
+
+    result.fold(
+      (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Logout failed: $error')),
+        );
+      },
+      (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Logged out successfully')),
+        );
+        AppNavigator.push(context,SigninPage());
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +100,8 @@ class ProfilePage extends StatelessWidget {
                 ProfileMenuItem(icon: Icons.edit, title: "Edit Profile", onTap: () {}),
                 ProfileMenuItem(icon: Icons.history, title: "History", onTap: () {}),
                 ProfileMenuItem(icon: Icons.lock, title: "Change password", onTap: () {}),
-                ProfileMenuItem(icon: Icons.logout, title: "Log out", onTap: () {}, isLogout: true),
+                ProfileMenuItem(icon: Icons.logout, title: "Log out", onTap: () => _confirmLogout(context),
+                ),
               ],
             ),
           ),

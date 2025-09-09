@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mobile/common/helper/navigator/app_navigator.dart';
 import 'package:mobile/core/configs/theme/app_colors.dart';
 import 'package:mobile/domain/auth/entity/user.dart';
 import 'package:mobile/presentation/home/bloc/user_info_display_cubit.dart';
