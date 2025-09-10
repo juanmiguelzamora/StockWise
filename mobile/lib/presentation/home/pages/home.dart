@@ -27,15 +27,12 @@ class HomePage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Header(),
-                  const SizedBox(height: 24),
-                  // Stock Summary Section
-                  _buildSectionTitle(context, "Stocks"),
+                  const SizedBox(height: 8),
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16.0),
                     child: StockOverview(),
                   ),
-                  const SizedBox(height: 24),
-                  
+                  const SizedBox(height: 8),
                   // Stock Summary Section
                   _buildSectionTitle(context, "Stocks"),
                   const Padding(

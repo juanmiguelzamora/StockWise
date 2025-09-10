@@ -1,8 +1,11 @@
 import 'package:get_it/get_it.dart';
+import 'package:mobile/data/ai_assistant/repository/ai_repository_impl.dart';
+import 'package:mobile/data/ai_assistant/source/ai_remote_datasource.dart';
 import 'package:mobile/data/auth/repository/auth_repository_impl.dart';
 import 'package:mobile/data/auth/source/auth_firebase_service.dart';
 import 'package:mobile/data/inventory/datasources/inventory_remote_datasource.dart';
 import 'package:mobile/data/inventory/repositories/inventory_repository_impl.dart';
+import 'package:mobile/domain/ai_assistant/repository/ai_repository.dart';
 import 'package:mobile/domain/auth/repository/auth.dart';
 import 'package:mobile/domain/auth/usecases/get_user.dart';
 import 'package:mobile/domain/auth/usecases/is_logged_in.dart';
@@ -14,6 +17,7 @@ import 'package:mobile/domain/inventory/repository/inventory_repository.dart';
 import 'package:mobile/domain/inventory/usecases/get_inventory.dart';
 import 'package:mobile/domain/inventory/usecases/get_inventory_summary.dart';
 import 'package:mobile/domain/inventory/usecases/get_stock_status.dart';
+import 'package:mobile/presentation/ai_assistant/ai_provider.dart';
 import 'package:mobile/presentation/inventory/provider/inventory_provider.dart';
 
 final sl = GetIt.instance;
@@ -83,11 +87,11 @@ Future<void> iniatializeServiceLocator() async {
   );
   sl.registerLazySingleton<GetStockStatus>(
   () => GetStockStatus(),
-);
+  );
 
-sl.registerLazySingleton<GetInventorySummary>(
-  () => GetInventorySummary(),
-);
+  sl.registerLazySingleton<GetInventorySummary>(
+    () => GetInventorySummary(),
+  );
 
   // providers (presentation)
   sl.registerFactory<InventoryProvider>(
@@ -97,5 +101,17 @@ sl.registerLazySingleton<GetInventorySummary>(
     sl<GetInventorySummary>(),
   ),
 );
+
+
+// const baseUrl = "http://192.168.100.16:8000"; // adjust to your API
+
+  // datasource
+  sl.registerLazySingleton<AiRemoteDataSource>(() => AiRemoteDataSource(baseUrl));
+
+  // repository
+  sl.registerLazySingleton<AiRepository>(() => AiRepositoryImpl(sl<AiRemoteDataSource>()));
+
+  // provider
+  sl.registerFactory<AiProvider>(() => AiProvider(sl<AiRepository>()));
 
 }
