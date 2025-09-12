@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stock_wise/screens/home_screen.dart';
 
 import 'scanner_screen.dart';
 
@@ -14,7 +15,7 @@ class _BottomNavState extends State<BottomNav> {
     int _selectedIndex = 0;
     
     final List<Widget> _pages = [
-      const Center(child: Text('Home')),
+      const HomeScreen(),
       const Center(child: Text('Stocks')),
       const Center(child: Text('AI Assistant')),
       const Center(child: Text('Profile')),
@@ -59,7 +60,7 @@ class _BottomNavState extends State<BottomNav> {
                 items: const [
                   BottomNavigationBarItem(
                     icon: Icon(Icons.home),
-                    label: 'Home',
+                    label: 'HomeScreen',
                   ),
                   BottomNavigationBarItem(
                     icon: Icon(Icons.show_chart),
