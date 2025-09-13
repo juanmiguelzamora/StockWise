@@ -5,6 +5,7 @@ import 'package:mobile/domain/navigation/entity/nav_item.dart';
 import 'package:mobile/presentation/Profile/pages/profile_page.dart';
 import 'package:mobile/presentation/ai_assistant/pages/ai_page.dart';
 import 'package:mobile/presentation/home/pages/home.dart';
+import 'package:mobile/presentation/product/pages/product_list_page.dart';
 //import 'package:mobile/presentation/stocks/stocks_page.dart';
 // import 'package:mobile/presentation/assistant/assistant_page.dart';
 // import 'package:mobile/presentation/profile/profile_page.dart';
@@ -21,7 +22,7 @@ class BottomNavPage extends StatelessWidget {
         builder: (context, selectedItem) {
           final pages = {
             NavItem.home: const HomePage(),
-            //NavItem.stocks: const StocksPage(),
+            NavItem.stocks: const ProductListPage(),
             NavItem.assistant: const AiPage(),
             NavItem.profile: const ProfilePage(),
           };

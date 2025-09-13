@@ -5,6 +5,8 @@ import 'package:mobile/data/auth/repository/auth_repository_impl.dart';
 import 'package:mobile/data/auth/source/auth_firebase_service.dart';
 import 'package:mobile/data/inventory/datasources/inventory_remote_datasource.dart';
 import 'package:mobile/data/inventory/repositories/inventory_repository_impl.dart';
+import 'package:mobile/data/product/repository/product_repository_impl.dart';
+import 'package:mobile/data/product/source/product_remote_datasource.dart';
 import 'package:mobile/domain/ai_assistant/repository/ai_repository.dart';
 import 'package:mobile/domain/auth/repository/auth.dart';
 import 'package:mobile/domain/auth/usecases/get_user.dart';
@@ -17,8 +19,12 @@ import 'package:mobile/domain/inventory/repository/inventory_repository.dart';
 import 'package:mobile/domain/inventory/usecases/get_inventory.dart';
 import 'package:mobile/domain/inventory/usecases/get_inventory_summary.dart';
 import 'package:mobile/domain/inventory/usecases/get_stock_status.dart';
+import 'package:mobile/domain/product/repository/product_repository.dart';
+import 'package:mobile/domain/product/usecases/get_product_usecase.dart';
+import 'package:mobile/domain/product/usecases/update_product_quantity_usecase.dart';
 import 'package:mobile/presentation/ai_assistant/ai_provider.dart';
 import 'package:mobile/presentation/inventory/provider/inventory_provider.dart';
+import 'package:mobile/presentation/product/provider/product_provider.dart';
 
 final sl = GetIt.instance;
 
@@ -69,7 +75,9 @@ Future<void> iniatializeServiceLocator() async {
   //  INVENTORY
   // ========================
 
-  const baseUrl = "http://192.168.100.16:8000"; // <- change this later
+  //const baseUrl = "http://192.168.100.16:8000"; // <- change this later
+  const baseUrl = "http://10.35.183.201:8000"; // <- change this later
+
 
   // data sources
   sl.registerLazySingleton<InventoryRemoteDataSource>(
@@ -103,7 +111,9 @@ Future<void> iniatializeServiceLocator() async {
 );
 
 
-// const baseUrl = "http://192.168.100.16:8000"; // adjust to your API
+  // ========================
+  //  AI ASSISTANT
+  // ========================
 
   // datasource
   sl.registerLazySingleton<AiRemoteDataSource>(() => AiRemoteDataSource(baseUrl));
@@ -114,4 +124,35 @@ Future<void> iniatializeServiceLocator() async {
   // provider
   sl.registerFactory<AiProvider>(() => AiProvider(sl<AiRepository>()));
 
+  
+  // ========================
+  //  PRODUCT FEATURE 
+  // ========================
+
+  // Data source
+  sl.registerLazySingleton<ProductRemoteDataSource>(
+    () => ProductRemoteDataSource(baseUrl: baseUrl),
+  );
+
+  // Repository
+  sl.registerLazySingleton<ProductRepository>(
+    () => ProductRepositoryImpl(remoteDataSource: sl<ProductRemoteDataSource>()),
+  );
+
+  // Use cases
+  sl.registerLazySingleton<GetProductsUseCase>(
+    () => GetProductsUseCase(sl<ProductRepository>()),
+  );
+
+  sl.registerLazySingleton<UpdateProductQuantityUseCase>(
+    () => UpdateProductQuantityUseCase(sl<ProductRepository>()),
+  );
+
+  // Provider
+  sl.registerFactory<ProductProvider>(
+    () => ProductProvider(
+      getProductsUseCase: sl<GetProductsUseCase>(),
+      updateQuantityUseCase: sl<UpdateProductQuantityUseCase>(),
+    ),
+  );
 }

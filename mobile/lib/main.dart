@@ -4,6 +4,7 @@ import 'package:mobile/core/configs/theme/app_theme.dart';
 import 'package:mobile/domain/auth/usecases/is_logged_in.dart';
 import 'package:mobile/firebase_options.dart';
 import 'package:mobile/presentation/ai_assistant/ai_provider.dart';
+import 'package:mobile/presentation/product/provider/product_provider.dart';
 import 'package:mobile/presentation/splash/bloc/splash_cubit.dart';
 import 'package:mobile/presentation/splash/pages/splash.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -33,6 +34,10 @@ class MyApp extends StatelessWidget {
         // AI Assistant provider
         ChangeNotifierProvider(
           create: (_) => di.sl<AiProvider>(),
+        ),
+        // Product Inventory provider
+        ChangeNotifierProvider(
+          create: (_) => di.sl<ProductProvider>(),
         ),
       ],
       child: BlocProvider(
