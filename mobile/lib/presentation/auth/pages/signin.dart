@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:mobile/common/bloc/button/button_state.dart';
 import 'package:mobile/common/bloc/button/button_state_cubit.dart';
 import 'package:mobile/common/helper/navigator/app_navigator.dart';
 import 'package:mobile/common/widgets/button/basic_reactive_button.dart';
+import 'package:mobile/core/configs/assets/app_vectors.dart';
 import 'package:mobile/data/auth/models/user_signin_req.dart';
 import 'package:mobile/domain/auth/usecases/signin.dart';
-import 'package:mobile/presentation/home/widgets/bottom_nav_page.dart';
 import 'package:mobile/presentation/auth/pages/forgot_password.dart';
 import 'package:mobile/presentation/auth/pages/signup.dart';
+import 'package:mobile/presentation/home/widgets/bottom_nav_page.dart';
 import 'package:mobile/service_locator.dart';
 
 class SigninPage extends StatelessWidget {
@@ -73,25 +75,14 @@ class SigninPage extends StatelessWidget {
   Widget _logo() {
     return Row(
       children: [
-        Image.asset("assets/stockwise_logo.png", height: 32),
-        const SizedBox(width: 6),
-        const Text(
-          "STOCKWISE",
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-          ),
-        ),
+        SvgPicture.asset(AppVectors.stockLogo), //
       ],
     );
   }
 
   /// Illustration (center image)
   Widget _illustration() {
-    return Center(
-      child: Image.asset("assets/tablet_login_picture.png", height: 160),
-    );
+    return Center(child: SvgPicture.asset(AppVectors.logLogo));
   }
 
   /// Welcome text
@@ -130,6 +121,8 @@ class SigninPage extends StatelessWidget {
           controller: _emailCon,
           decoration: InputDecoration(
             hintText: "johndoe@gmail.com",
+            filled: true,
+            fillColor: Colors.transparent, // Make background transparent
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
@@ -175,6 +168,8 @@ class SigninPage extends StatelessWidget {
           obscureText: true,
           decoration: InputDecoration(
             hintText: "Enter your password",
+            filled: true,
+            fillColor: Colors.transparent, // Make background transparent
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,

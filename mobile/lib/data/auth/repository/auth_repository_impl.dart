@@ -6,7 +6,7 @@ import 'package:mobile/data/auth/source/auth_firebase_service.dart';
 import 'package:mobile/domain/auth/repository/auth.dart';
 
 
-class AuthRepositoryImpl extends AuthRepository {
+class AuthRepositoryImpl implements AuthRepository {
   final AuthFireseService _service;
 
   AuthRepositoryImpl(this._service);

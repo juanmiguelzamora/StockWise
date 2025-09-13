@@ -1,39 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile/common/helper/navigator/app_navigator.dart';
 import 'package:mobile/core/configs/assets/app_vectors.dart';
-import 'package:mobile/core/configs/theme/app_colors.dart';
 import 'package:mobile/presentation/auth/pages/signin.dart';
 import 'package:mobile/presentation/home/pages/home.dart';
-import 'package:mobile/presentation/splash/bloc/splash_state.dart';
 import 'package:mobile/presentation/splash/bloc/splash_cubit.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-
-
+import 'package:mobile/presentation/splash/bloc/splash_state.dart';
 
 class SplashPage extends StatelessWidget {
   const SplashPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<SplashCubit,SplashState>(
+    return BlocListener<SplashCubit, SplashState>(
       listener: (context, state) {
-        if(state is UnAuthenticated) {
+        if (state is UnAuthenticated) {
           AppNavigator.pushReplacement(
-            context, SigninPage()
+            context,
+            SigninPage(),
           );
         }
-        if(state is Authenticated) {
+        if (state is Authenticated) {
           AppNavigator.pushReplacement(
-            context, const HomePage()
-            );
+            context,
+            const HomePage(),
+          );
         }
       },
       child: Scaffold(
-        backgroundColor: AppColors.primary,
+        backgroundColor: const Color(0xFFF6F6F8),
         body: Center(
           child: SvgPicture.asset(
-            AppVectors.appLogo
+            AppVectors.splashLogo,
+            height: 120,
+            width: 120,
+            placeholderBuilder: (context) => const CircularProgressIndicator(),
           ),
         ),
       ),
