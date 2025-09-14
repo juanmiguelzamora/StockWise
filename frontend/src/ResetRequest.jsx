@@ -16,7 +16,7 @@ export default function ResetRequest() {
     setMessage("");
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/auth/password-reset/", {
+      const res = await fetch("http://192.168.0.102:8000/api/v1/users/password-reset/",{
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -26,7 +26,7 @@ export default function ResetRequest() {
       if (res.ok) {
         setMessage("Check your email for a reset link.");
       } else {
-        setError(data.detail || "Something went wrong.");
+        setError(data.detail || "No user found with this email.");
       }
     } catch (err) {
       setError("Server error");

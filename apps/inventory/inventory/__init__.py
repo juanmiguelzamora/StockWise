@@ -1,4 +1,0 @@
-# Inventory app package
-
-
-

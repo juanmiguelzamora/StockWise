@@ -6,18 +6,17 @@ export default function Signup() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState([]); // now an array
+  const [errors, setErrors] = useState([]);
   const navigate = useNavigate();
 
   const handleSignup = async (e) => {
     e.preventDefault();
 
-    // frontend validation
+    // Frontend validation
     if (!email || !password || !confirmPassword) {
       setErrors(["⚠️ Please fill in all fields"]);
       return;
     }
-
     if (password !== confirmPassword) {
       setErrors(["⚠️ Passwords do not match"]);
       return;
@@ -30,40 +29,37 @@ export default function Signup() {
       const res = await fetch("http://localhost:8000/api/v1/users/signup/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          email,
+          password,
+          re_password: confirmPassword,
+        }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        // Extract all error messages
         let errorList = [];
-
-        if (typeof data === "string") {
-          errorList.push(data);
-        } else if (data.detail) {
-          errorList.push(data.detail);
-        } else {
-          for (const key in data) {
-            if (Array.isArray(data[key])) {
-              errorList = [...errorList, ...data[key]];
-            } else if (typeof data[key] === "string") {
-              errorList.push(data[key]);
-            }
-          }
-        }
-
+        const extractErrors = (obj) => {
+          if (!obj) return;
+          if (Array.isArray(obj)) obj.forEach(extractErrors);
+          else if (typeof obj === "object") Object.values(obj).forEach(extractErrors);
+          else errorList.push(obj);
+        };
+        extractErrors(data);
         setErrors(errorList.length > 0 ? errorList : ["Signup failed. Please try again."]);
         setLoading(false);
         return;
       }
 
-      // success → save JWT
-      if (data.token) {
-        localStorage.setItem("token", data.token);
+      // ✅ Save JWT properly (per tab, not global)
+      if (data.access && data.refresh) {
+        sessionStorage.setItem("access", data.access);
+        sessionStorage.setItem("refresh", data.refresh);
       }
 
-      navigate("/dashboard");
+      // Redirect after successful signup
+      navigate("/login");
     } catch (err) {
       setErrors(["Network error: " + err.message]);
     } finally {
@@ -85,7 +81,6 @@ export default function Signup() {
           <h1 className="text-5xl font-bold mb-2">Create an account</h1>
           <p className="text-gray-500 mb-6">Please enter your details to sign up</p>
 
-          {/* Show all errors */}
           {errors.length > 0 && (
             <div className="bg-red-100 text-red-600 p-3 mb-4 rounded">
               <ul className="list-disc list-inside space-y-1">

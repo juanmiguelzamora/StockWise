@@ -1,9 +1,10 @@
 import { useEffect, useState, useMemo } from "react";
-import { auth } from "./firebase";
 import { useNavigate } from "react-router-dom";
-import { signOut } from "firebase/auth";
+
 import LoadingSpinner from "./components/ui/LoadingSpinner";
 import api, { getCSRFToken } from "./api";
+import Navbar from "./navbar/navbar";
+
 
 export default function Protected() {
   const [items, setItems] = useState([]);
@@ -21,7 +22,6 @@ export default function Protected() {
       setLoading(true);
       setError("");
       try {
-        // include auth token if your backend requires it (optional)
         const token = await auth.currentUser?.getIdToken(true);
         const res = await api.get("/api/items/", {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -42,7 +42,7 @@ export default function Protected() {
     };
   }, []);
 
-  // Debounced client-side filter (adjust to server-side search by querying backend instead)
+  // Debounced filter
   useEffect(() => {
     if (query === "") {
       setFiltered(items);
@@ -68,7 +68,6 @@ export default function Protected() {
 
   const handleBackendLogout = async () => {
     try {
-      // Attempt backend logout (won't block client sign-out)
       try {
         const token = await auth.currentUser?.getIdToken(true);
         const csrf = await getCSRFToken();
@@ -80,8 +79,6 @@ export default function Protected() {
       } catch (err) {
         console.warn("Backend logout failed:", err);
       }
-
-      // client sign-out and navigate
       await signOut(auth);
       navigate("/login");
     } catch (err) {
@@ -99,26 +96,19 @@ export default function Protected() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">StockWises Dashboard</h1>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              {visible} of {total} items shown
-            </p>
-          </div>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Navbar at the top */}
+      <Navbar onLogout={handleBackendLogout} />
 
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleBackendLogout}
-              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md shadow-sm"
-            >
-              Sign Out
-            </button>
-          </div>
+      <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">StockWises Dashboard</h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            {visible} of {total} items shown
+          </p>
         </div>
 
+        {/* Search box */}
         <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-5 mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <label className="sr-only" htmlFor="search">Search items</label>
@@ -135,26 +125,25 @@ export default function Protected() {
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-500">Searching…</div>
               )}
             </div>
-
-            <div>
-              <button
-                onClick={() => { setQuery(""); setFiltered(items); }}
-                className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md"
-              >
-                Clear
-              </button>
-            </div>
+            <button
+              onClick={() => { setQuery(""); setFiltered(items); }}
+              className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md"
+            >
+              Clear
+            </button>
           </div>
         </div>
 
+        {/* Error message */}
         {error && (
           <div className="mb-4 p-3 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700">
             {error}
           </div>
         )}
 
+        {/* Items grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered && filtered.length ? (
+          {filtered.length ? (
             filtered.map((item) => (
               <div key={item.id || item.pk || item.sku || Math.random()} className="bg-white dark:bg-gray-800 shadow rounded-lg p-4">
                 <div className="flex items-start justify-between">

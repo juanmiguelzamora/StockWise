@@ -1,4 +1,4 @@
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 
 export default function ResetPassword() {
@@ -8,13 +8,20 @@ export default function ResetPassword() {
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Client-side validation
+    if (!password || !confirmPassword) {
+      setError("Please fill in all fields.");
+      return;
+    }
     if (password !== confirmPassword) {
       setError("Passwords do not match!");
       return;
@@ -22,31 +29,50 @@ export default function ResetPassword() {
 
     setLoading(true);
     setError("");
-    setMessage("");
+    setSuccess("");
 
     try {
-  const res = await fetch(
-  "http://172.16.3.234/api/v1/users/password-reset-confirm/",
+      const res = await fetch(
+        "http://192.168.0.102:8000/api/v1/users/password-reset-confirm/",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            uid,
-            token,
-            password, // ✅ correct key for your backend
-          }),
+        body: JSON.stringify({
+  uid,
+  token,
+  new_password: password,
+  confirm_password: confirmPassword
+})
+
         }
       );
 
-      const data = await res.json();
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error("Invalid server response.");
+      }
 
-      if (res.ok && data.success) {
-        setMessage("Password reset successful! You can now log in.");
+      if (res.ok) {
+        setSuccess("Password reset successfully! Redirecting to login...");
+        setTimeout(() => navigate("/login", { replace: true }), 2000);
       } else {
-        setError(data.message || "Something went wrong.");
+        if (data.errors) {
+          // Combine all field errors into one string
+          const allErrors = Object.values(data.errors)
+            .flat()
+            .join(" ");
+          setError(allErrors || "Something went wrong.");
+        } else if (data.message) {
+          setError(data.message);
+        } else {
+          setError("Something went wrong.");
+        }
       }
     } catch (e) {
       setError("Server error, please try again later.");
+      console.error(e);
     } finally {
       setLoading(false);
     }
@@ -81,11 +107,7 @@ export default function ResetPassword() {
         </button>
       </form>
       {error && <p style={{ color: "red" }}>{error}</p>}
-      {message && (
-        <p style={{ color: "green" }}>
-          {message} <Link to="/login">Login</Link>
-        </p>
-      )}
+      {success && <p style={{ color: "green" }}>{success}</p>}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import Signup from "./Signup";
 import ResetRequest from "./ResetRequest";
 import Dashboard from "./Dashboard";
 import ResetPassword from "./ResetPassword";
+import User from "./navbar/user";
 
 export default function App() {
   return (
@@ -14,7 +15,9 @@ export default function App() {
         <Route path="/reset-request" element={<ResetRequest />} />
         <Route path="/reset-password" element={<ResetPassword />} />
          <Route path="/reset" element={<ResetRequest />} />
-        <Route path="/Dashboard" element={<Dashboard/>} />
+        <Route path="/dashboard" element={<Dashboard/>} />
+         <Route path="/users" element={<User />} />
       </Routes>
   );
 }
+

@@ -1,187 +1,222 @@
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status, permissions, generics, viewsets
 from django.contrib.auth import get_user_model, authenticate
-from django.core.mail import send_mail
-from django.utils.crypto import get_random_string
+from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
-from django.contrib.auth.tokens import default_token_generator
-import json, jwt, datetime, re, traceback
+from django.core.mail import send_mail
 from django.conf import settings
+from django.shortcuts import get_object_or_404
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework_simplejwt.tokens import RefreshToken
+import datetime
+import jwt
+from .permissions import IsAdminUser
+from rest_framework_simplejwt.views import TokenObtainPairView
+from .serializers import AdminOnlyTokenObtainPairSerializer
+
+from .serializers import (
+    RegisterSerializer,
+    PasswordResetSerializer,
+    PasswordResetConfirmSerializer,
+    UserSerializer,
+)
 
 User = get_user_model()
 
-# --- Helpers ---
+
+# --- Current user ---
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+def current_user(request):
+    user = request.user
+    return Response({
+        "id": user.id,
+        "email": user.email,
+        "is_staff": user.is_staff,
+        "is_superuser": user.is_superuser,
+    })
+
+
+# --- JWT helper ---
 def generate_jwt(user, hours=24):
     payload = {
-        "user_id": user.id,
+        "user_id": str(user.id),
         "email": user.email,
         "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=hours),
         "iat": datetime.datetime.utcnow(),
     }
-    token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
-    return token if isinstance(token, str) else token.decode("utf-8")
+    return jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
+
+class AdminOnlyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = AdminOnlyTokenObtainPairSerializer
+
+# --- Signup ---
+class RegisterView(generics.CreateAPIView):
+    serializer_class = RegisterSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+
+        refresh = RefreshToken.for_user(user)
+
+        return Response({
+            "message": "User registered successfully",
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "is_staff": user.is_staff,
+                "is_superuser": user.is_superuser,
+            },
+            "tokens": {
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+            },
+        }, status=status.HTTP_201_CREATED)
 
 
-def validate_password(password):
-    if len(password) < 8:
-        return "Password must be at least 8 characters long."
-    if not re.search(r"[A-Z]", password):
-        return "Password must contain at least one uppercase letter."
-    if not re.search(r"[a-z]", password):
-        return "Password must contain at least one lowercase letter."
-    if not re.search(r"\d", password):
-        return "Password must contain at least one number."
-    if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
-        return "Password must contain at least one special character."
-    return None
+# --- Logout ---
+class LogoutView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
 
-
-# --- Signup/Login/Logout ---
-@csrf_exempt
-def signup_view(request):
-    if request.method != "POST":
-        return JsonResponse({"success": False, "message": "Invalid request method"}, status=405)
-    try:
-        data = json.loads(request.body)
-        email = data.get("email")
-        password = data.get("password")
-
-        if not email or not password:
-            return JsonResponse({"success": False, "message": "Email and password required"}, status=400)
-
-        password_error = validate_password(password)
-        if password_error:
-            return JsonResponse({"success": False, "message": password_error}, status=400)
-
-        if User.objects.filter(email=email).exists():
-            return JsonResponse({"success": False, "message": "Email already in use"}, status=400)
-
-        user = User.objects.create_user(username=email, email=email, password=password)
-        return JsonResponse({"success": True, "message": "Signup successful"}, status=201)
-
-    except Exception as e:
-        traceback.print_exc()
-        return JsonResponse({"success": False, "message": str(e)}, status=500)
-
-
-@csrf_exempt
-def login_view(request):
-    if request.method != "POST":
-        return JsonResponse({"success": False, "message": "Method not allowed"}, status=405)
-    try:
-        data = json.loads(request.body)
-        email = data.get("email")
-        password = data.get("password")
-
-        if not email or not password:
-            return JsonResponse({"success": False, "message": "Email and password are required."}, status=400)
-
-        try:
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            return JsonResponse({"success": False, "message": "Invalid email or password"}, status=401)
-
-        user = authenticate(username=user.username, password=password)
-        if user is None:
-            return JsonResponse({"success": False, "message": "Invalid email or password"}, status=401)
-
-        if not user.is_active:
-            return JsonResponse({"success": False, "message": "This account has been disabled"}, status=403)
-
-        token = generate_jwt(user)
-        return JsonResponse({"success": True, "message": "Login successful", "token": token}, status=200)
-
-    except Exception as e:
-        traceback.print_exc()
-        return JsonResponse({"success": False, "message": f"Login failed: {str(e)}"}, status=500)
-
-
-@csrf_exempt
-def logout_view(request):
-    if request.method == "POST":
-        return JsonResponse({
-            "success": True,
-            "message": "Logout successful. Please remove the token on client side."
-        }, status=200)
-    return JsonResponse({"success": False, "message": "Method not allowed"}, status=405)
-
-
-# --- Password Reset ---
-@csrf_exempt
-def password_reset_request_view(request):
-    if request.method != "POST":
-        return JsonResponse({"success": False, "message": "Method not allowed"}, status=405)
-    try:
-        data = json.loads(request.body)
-        email = data.get("email")
-        if not email:
-            return JsonResponse({"success": False, "message": "Email required"}, status=400)
-
-        try:
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            # Always pretend success to prevent email enumeration
-            return JsonResponse({"success": True, "message": "If the email exists, a reset link was sent."})
-
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
-        token = default_token_generator.make_token(user)
-
-        reset_link = f"{settings.FRONTEND_URL}/reset-password?uid={uid}&token={token}"
-
-        send_mail(
-            subject="Password Reset Request",
-            message=f"Click this link to reset your password:\n{reset_link}",
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[email],
+    def post(self, request):
+        return Response(
+            {"success": True, "message": "Logout successful. Please remove token client-side."},
+            status=status.HTTP_200_OK,
         )
 
-        return JsonResponse({"success": True, "message": "Reset link sent to email"})
 
-    except Exception as e:
-        traceback.print_exc()
-        return JsonResponse({"success": False, "message": str(e)}, status=500)
+# --- Password Reset Request ---
+class PasswordResetRequestView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = PasswordResetSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data["email"]
+            user = get_object_or_404(User, email=email)
+
+            uid = urlsafe_base64_encode(force_bytes(str(user.pk)))
+            token = default_token_generator.make_token(user)
+            reset_link = f"{settings.FRONTEND_URL}/reset-password?uid={uid}&token={token}"
+
+            try:
+                send_mail(
+                    subject="Password Reset Request",
+                    message=f"Click this link to reset your password:\n{reset_link}",
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[email],
+                )
+            except Exception as e:
+                return Response(
+                    {"success": False, "message": f"Email send failed: {str(e)}"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
+
+            return Response({"success": True, "message": "Reset link sent to email"}, status=status.HTTP_200_OK)
+
+        return Response({"success": False, "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
-@csrf_exempt
-def password_reset_confirm_view(request):
-    if request.method != "POST":
-        return JsonResponse({"success": False, "message": "Method not allowed"}, status=405)
-    
-    try:
-        data = json.loads(request.body)
-        uidb64 = data.get("uid")
-        token = data.get("token")
-        new_password = data.get("password")
+# --- Password Reset Confirm ---
+class PasswordResetConfirmView(APIView):
+    permission_classes = [permissions.AllowAny]
 
-        if not uidb64 or not token or not new_password:
-            return JsonResponse({"success": False, "message": "UID, token, and password required"}, status=400)
+    def post(self, request):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response({"success": False, "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        uidb64 = request.data.get("uid")
+        token = request.data.get("token")
+        new_password = serializer.validated_data.get("new_password")
+        confirm_password = serializer.validated_data.get("confirm_password")
+
+        if new_password != confirm_password:
+            return Response({"success": False, "message": "Passwords do not match."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not uidb64 or not token:
+            return Response({"success": False, "message": "Missing UID or token."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            # Decode UID safely
-            uid = force_str(urlsafe_base64_decode(uidb64))
-            user = User.objects.get(pk=uid)
-        except Exception as e:
-            traceback.print_exc()
-            return JsonResponse({
-                "success": False,
-                "message": f"Invalid UID. Error: {str(e)}"
-            }, status=400)
+            uid_decoded = force_str(urlsafe_base64_decode(uidb64))
+            user = get_object_or_404(User, pk=int(uid_decoded))
+        except Exception:
+            return Response({"success": False, "message": "Invalid UID."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Check token validity
         if not default_token_generator.check_token(user, token):
-            return JsonResponse({"success": False, "message": "Invalid or expired token"}, status=400)
-
-        # Validate new password
-        password_error = validate_password(new_password)
-        if password_error:
-            return JsonResponse({"success": False, "message": password_error}, status=400)
+            return Response({"success": False, "message": "Invalid or expired token."}, status=status.HTTP_400_BAD_REQUEST)
 
         user.set_password(new_password)
         user.save()
 
-        return JsonResponse({"success": True, "message": "Password reset successfully"})
+        return Response({"success": True, "message": "Password reset successfully."}, status=status.HTTP_200_OK)
 
-    except Exception as e:
-        traceback.print_exc()
-        return JsonResponse({"success": False, "message": f"Server error: {str(e)}"}, status=500)
+
+# --- Custom Permission ---
+
+class IsSuperuserOrReadOnlyForStaff(permissions.BasePermission):
+    """
+    Superusers: full access
+    Staff: read-only (cannot create/edit/delete)
+    """
+
+    def has_permission(self, request, view):
+        if request.user.is_superuser:
+            return True
+        if request.user.is_staff and request.method in permissions.SAFE_METHODS:
+            return True
+        return False
+
+    def has_object_permission(self, request, view, obj):
+        if request.user.is_superuser:
+            return True
+        if request.user.is_staff and request.method in permissions.SAFE_METHODS:
+            return True
+        return False
+
+# --- User ViewSet ---
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated, IsSuperuserOrReadOnlyForStaff]
+
+    def destroy(self, request, *args, **kwargs):
+        user = self.get_object()
+        current_user = request.user
+
+        # Prevent deleting superuser by staff
+        if user.is_superuser and not current_user.is_superuser:
+            return Response(
+                {"detail": "You cannot delete a superuser account."},
+                status=403
+            )
+
+        # Prevent self-deletion
+        if user.id == current_user.id:
+            return Response(
+                {"detail": "You cannot delete your own account."},
+                status=400
+            )
+
+        return super().destroy(request, *args, **kwargs)
+
+
+        
+class UserManagementView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def delete(self, request, user_id):
+        try:
+            user = User.objects.get(id=user_id)
+            user.delete()
+            return Response({"message": "User deleted successfully"}, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        

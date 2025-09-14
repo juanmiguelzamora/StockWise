@@ -2,4 +2,7 @@ from django.apps import AppConfig
 
 class InventoryConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "apps.inventory.inventory"
+    name = "apps.inventory"   # ✅ correct
+    verbose_name = "Inventory"
+
+    

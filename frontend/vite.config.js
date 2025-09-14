@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: "0.0.0.0",   // allow access on your LAN (phone, other devices)
-    port: 5173,
+    port: 5174,
   },
   resolve: {
     alias: {
@@ -18,7 +18,7 @@ export default defineConfig({
   },
   // 👇 This is the important part
   preview: {
-    port: 5173,
+    port: 5174,
     strictPort: true,
   },
 });
