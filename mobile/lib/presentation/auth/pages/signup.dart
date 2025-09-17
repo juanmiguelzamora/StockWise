@@ -13,6 +13,8 @@ import 'package:mobile/service_locator.dart';
 class SignupPage extends StatelessWidget {
   SignupPage({super.key});
 
+  final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
@@ -25,7 +27,11 @@ class SignupPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       body: MultiBlocProvider(
-        providers: [BlocProvider(create: (_) => ButtonStateCubit())],
+        providers: [
+          BlocProvider<ButtonStateCubit>(
+            create: (_) => ButtonStateCubit(),
+          ),
+        ],
         child: BlocListener<ButtonStateCubit, ButtonState>(
           listener: (context, state) {
             if (state is ButtonFailureState) {
@@ -65,11 +71,37 @@ class SignupPage extends StatelessWidget {
                   const Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      "Create an new account.",
+                      "Create a new account.",
                       style: TextStyle(color: Colors.black54, fontSize: 14),
                     ),
                   ),
                   const SizedBox(height: 24),
+
+                  // --- First Name ---
+                  TextField(
+                    controller: _firstNameController,
+                    decoration: InputDecoration(
+                      hintText: "First Name",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // --- Last Name ---
+                  TextField(
+                    controller: _lastNameController,
+                    decoration: InputDecoration(
+                      hintText: "Last Name",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
 
                   // --- Email ---
                   TextField(
@@ -131,30 +163,61 @@ class SignupPage extends StatelessWidget {
                   const SizedBox(height: 24),
 
                   // --- Signup Button ---
-                  SizedBox(
-                    width: double.infinity,
-                    height: 55,
-                    child: BasicReactiveButton(
-                      onPressed: () {
-                        if (_passwordController.text != _confirmPasswordController.text) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Passwords do not match")),
-                          );
-                          return;
-                        }
+                  Builder(
+                    builder: (buttonContext) {
+                      return SizedBox(
+                        width: double.infinity,
+                        height: 55,
+                        child: BasicReactiveButton(
+                          onPressed: () {
+                            // Validate inputs
+                            if (_firstNameController.text.trim().isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("First name is required")),
+                              );
+                              return;
+                            }
+                            if (_lastNameController.text.trim().isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Last name is required")),
+                              );
+                              return;
+                            }
+                            if (_emailController.text.trim().isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Email is required")),
+                              );
+                              return;
+                            }
+                            if (_passwordController.text.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Password is required")),
+                              );
+                              return;
+                            }
+                            if (_passwordController.text != _confirmPasswordController.text) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Passwords do not match")),
+                              );
+                              return;
+                            }
 
-                        final userReq = UserCreationReq(
-                          email: _emailController.text,
-                          password: _passwordController.text, firstName: '', lastName: '',
-                        );
-
-                        context.read<ButtonStateCubit>().execute(
-                              usecase: sl<SignupUseCase>(),
-                              params: userReq,
+                            final userReq = UserCreationReq(
+                              firstName: _firstNameController.text.trim(),
+                              lastName: _lastNameController.text.trim(),
+                              email: _emailController.text.trim(),
+                              password: _passwordController.text,
                             );
-                      },
-                      title: "Sign up",
-                    ),
+
+                            buttonContext.read<ButtonStateCubit>().execute(
+                                  usecase: sl<SignupUseCase>(),
+                                  params: userReq,
+                                );
+                          },
+                          title: "Sign up",
+                        ),
+                      );
+                    },
                   ),
                   const SizedBox(height: 20),
 

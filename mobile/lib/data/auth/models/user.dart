@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:mobile/domain/auth/entity/user.dart';
 
 class UserModel {
@@ -7,7 +6,6 @@ class UserModel {
   final String email;
   final String firstName;
   final String lastName;
-
 
   UserModel({
     required this.userId,
@@ -27,10 +25,10 @@ class UserModel {
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
     return UserModel(
-      userId: map['userId'] ?? '',
+      userId: map['id'].toString() ?? '',  // Django uses 'id'
       email: map['email'] ?? '',
-      firstName: map['firstName'] ?? '',
-      lastName: map['lastName'] ?? '',
+      firstName: map['first_name'] ?? '',  // Django uses underscore
+      lastName: map['last_name'] ?? '',
     );
   }
   
@@ -48,5 +46,4 @@ extension UserXModel on UserModel {
       lastName: lastName, 
     );
   }
-
 }

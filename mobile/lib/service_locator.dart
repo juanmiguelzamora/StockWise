@@ -2,7 +2,7 @@ import 'package:get_it/get_it.dart';
 import 'package:mobile/data/ai_assistant/repository/ai_repository_impl.dart';
 import 'package:mobile/data/ai_assistant/source/ai_remote_datasource.dart';
 import 'package:mobile/data/auth/repository/auth_repository_impl.dart';
-import 'package:mobile/data/auth/source/auth_firebase_service.dart';
+import 'package:mobile/data/auth/source/auth_api_service.dart';  // Updated to API service
 import 'package:mobile/data/inventory/datasources/inventory_remote_datasource.dart';
 import 'package:mobile/data/inventory/repositories/inventory_repository_impl.dart';
 import 'package:mobile/data/product/repository/product_repository_impl.dart';
@@ -29,42 +29,40 @@ import 'package:mobile/presentation/product/provider/product_provider.dart';
 final sl = GetIt.instance;
 
 Future<void> iniatializeServiceLocator() async {
-
+  const baseUrl = "http://192.168.100.16:8000/api/";  // Updated to Django backend
   // ========================
   //  AUTH
   // ========================
 
   // services
-  sl.registerLazySingleton<AuthFireseService>(
-    () => AuthFirebaseServiceImpl(),
+  sl.registerLazySingleton<AuthApiService>(
+    () => AuthApiServiceImpl(baseUrl),
   );
   
   // repositories
-
   sl.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(sl<AuthFireseService>()),
+    () => AuthRepositoryImpl(sl<AuthApiService>()),
   );
 
-  
   // usecases
   sl.registerSingleton<SignupUseCase>(
-    SignupUseCase()
+    SignupUseCase(),
   );
 
   sl.registerSingleton<SigninUseCase>(
-    SigninUseCase()
+    SigninUseCase(),
   );
 
   sl.registerSingleton<SendPasswordResetEmailUseCase>(
-    SendPasswordResetEmailUseCase()
+    SendPasswordResetEmailUseCase(),
   );
 
   sl.registerSingleton<IsLoggedInUseCase>(
-    IsLoggedInUseCase()
+    IsLoggedInUseCase(),
   );
 
   sl.registerSingleton<GetUserUseCase>(
-    GetUserUseCase()
+    GetUserUseCase(),
   );
 
   sl.registerSingleton<LogoutUseCase>(
@@ -74,9 +72,8 @@ Future<void> iniatializeServiceLocator() async {
   // ========================
   //  INVENTORY
   // ========================
-
   //const baseUrl = "http://192.168.100.16:8000"; // <- change this later
-  const baseUrl = "http://10.35.183.201:8000"; // <- change this later
+  //const baseUrl = "http://10.35.183.201:8000"; // <- change this later
 
 
   // data sources
@@ -94,7 +91,7 @@ Future<void> iniatializeServiceLocator() async {
     () => GetInventory(sl<InventoryRepository>()),
   );
   sl.registerLazySingleton<GetStockStatus>(
-  () => GetStockStatus(),
+    () => GetStockStatus(),
   );
 
   sl.registerLazySingleton<GetInventorySummary>(
@@ -103,13 +100,12 @@ Future<void> iniatializeServiceLocator() async {
 
   // providers (presentation)
   sl.registerFactory<InventoryProvider>(
-  () => InventoryProvider(
-    sl<GetInventory>(),
-    sl<GetStockStatus>(),
-    sl<GetInventorySummary>(),
-  ),
-);
-
+    () => InventoryProvider(
+      sl<GetInventory>(),
+      sl<GetStockStatus>(),
+      sl<GetInventorySummary>(),
+    ),
+  );
 
   // ========================
   //  AI ASSISTANT
@@ -124,7 +120,6 @@ Future<void> iniatializeServiceLocator() async {
   // provider
   sl.registerFactory<AiProvider>(() => AiProvider(sl<AiRepository>()));
 
-  
   // ========================
   //  PRODUCT FEATURE 
   // ========================

@@ -10,6 +10,10 @@ build/
 .flutter-plugins-dependencies
 .dart_tool/
 pubspec.lock
+mobile/linux/flutter/generated_plugin_registrant.cc
+mobile/linux/flutter/generated_plugins.cmake
+mobile/windows/flutter/generated_plugin_registrant.cc
+mobile/windows/flutter/generated_plugins.cmake
 
 # Android build
 **/android/.gradle/
@@ -34,6 +38,7 @@ __pycache__/
 *.pyo
 *.pyd
 db.sqlite3
+venv/
 
 # Secrets
 *.env

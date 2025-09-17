@@ -2,12 +2,11 @@ import 'package:dartz/dartz.dart';
 import 'package:mobile/data/auth/models/user.dart';
 import 'package:mobile/data/auth/models/user_creation_req.dart';
 import 'package:mobile/data/auth/models/user_signin_req.dart';
-import 'package:mobile/data/auth/source/auth_firebase_service.dart';
+import 'package:mobile/data/auth/source/auth_api_service.dart';  
 import 'package:mobile/domain/auth/repository/auth.dart';
 
-
 class AuthRepositoryImpl extends AuthRepository {
-  final AuthFireseService _service;
+  final AuthApiService _service;  
 
   AuthRepositoryImpl(this._service);
 
@@ -23,7 +22,7 @@ class AuthRepositoryImpl extends AuthRepository {
   
   @override
   Future<Either> forgotPassword(String email) async {
-     return await _service.forgotPassword(email);
+    return await _service.forgotPassword(email);
   }
   
   @override
@@ -35,19 +34,18 @@ class AuthRepositoryImpl extends AuthRepository {
   Future<Either> getUser() async {
     var user = await _service.getUser();
     return user.fold(
-      (error) {
-        return Left(error);
-      },
-      (data) {
-        return Right(
-          UserModel.fromMap(data).toEntity()
-        );
-      }
+      (error) => Left(error),
+      (data) => Right(UserModel.fromMap(data).toEntity()),
     );
   }
   
   @override
   Future<Either> logout() async {
     return await _service.logout();
+  }
+
+  @override
+  Future<Either> refreshToken() async {
+    return await _service.refreshToken();
   }
 }
