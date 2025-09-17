@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import api from "../services/api";
 
 export default function ResetRequest() {
   const [email, setEmail] = useState("");
@@ -16,20 +17,17 @@ export default function ResetRequest() {
     setMessage("");
 
     try {
-      const res = await fetch("http://192.168.0.102:8000/api/v1/users/password-reset/",{
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
+      const res = await api.post("users/password-reset/", { email });
 
-      const data = await res.json();
-      if (res.ok) {
-        setMessage("Check your email for a reset link.");
-      } else {
-        setError(data.detail || "No user found with this email.");
-      }
+      setMessage("✅ Check your email for a reset link.");
     } catch (err) {
-      setError("Server error");
+      if (err.response) {
+        // Server responded but with an error
+        setError(err.response.data.detail || "No user found with this email.");
+      } else {
+        // Network or other issue
+        setError("⚠️ Server error. Please try again later.");
+      }
     } finally {
       setLoading(false);
     }
@@ -45,7 +43,9 @@ export default function ResetRequest() {
         onChange={(e) => setEmail(e.target.value)}
         required
       />
-      <button disabled={loading}>{loading ? "Sending..." : "Send reset email"}</button>
+      <button disabled={loading}>
+        {loading ? "Sending..." : "Send reset email"}
+      </button>
       {error && <p style={{ color: "red" }}>{error}</p>}
       {message && <p style={{ color: "green" }}>{message}</p>}
       <Link to="/login">Back to login</Link>

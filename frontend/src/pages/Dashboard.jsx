@@ -1,9 +1,9 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
-import LoadingSpinner from "./components/ui/LoadingSpinner";
-import api, { getCSRFToken } from "./api";
-import Navbar from "./navbar/navbar";
+import LoadingSpinner from "../components/ui/LoadingSpinner";
+import api, { getCSRFToken } from "../services/api";
+import Navbar from "../layout/navbar";
 
 
 export default function Protected() {

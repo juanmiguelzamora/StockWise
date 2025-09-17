@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import api from "./api"; // ✅ axios instance
+import api from "../services/api"; // ✅ axios instance
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -12,6 +12,7 @@ export default function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
 
+    // 🔹 Frontend validation
     if (!email || !password) {
       setErrors(["⚠️ Please fill in all fields"]);
       return;
@@ -21,7 +22,7 @@ export default function Login() {
     setErrors([]);
 
     try {
-      // clear old tokens before new login
+      // Clear old tokens before new login
       sessionStorage.removeItem("access");
       sessionStorage.removeItem("refresh");
 
@@ -38,10 +39,12 @@ export default function Login() {
 
         navigate("/dashboard");
       } else {
-        setErrors(["⚠️ No tokens returned. Check backend response."]);
+        setErrors(["⚠️ No tokens returned. Please check backend response."]);
       }
     } catch (err) {
       let errorList = [];
+
+      // 🔹 Extract validation errors from backend
       if (err.response?.data) {
         const extractErrors = (obj) => {
           if (!obj) return;
@@ -51,7 +54,8 @@ export default function Login() {
         };
         extractErrors(err.response.data);
       }
-      setErrors(errorList.length > 0 ? errorList : ["⚠️ Invalid Email or Password"]);
+
+      setErrors(errorList.length > 0 ? errorList : ["⚠️ Invalid email or password"]);
     } finally {
       setLoading(false);
     }
@@ -71,6 +75,7 @@ export default function Login() {
           <h1 className="text-5xl font-bold mb-2">Welcome back</h1>
           <p className="text-gray-500 mb-6">Please enter your details to login</p>
 
+          {/* 🔹 Error messages */}
           {errors.length > 0 && (
             <div className="bg-red-100 text-red-600 p-3 mb-4 rounded">
               <ul className="list-disc list-inside space-y-1">

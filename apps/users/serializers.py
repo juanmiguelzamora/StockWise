@@ -8,22 +8,34 @@ User = get_user_model()
 
 
 # --- Login Serializer ---
-class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    password = serializers.CharField(write_only=True)
+class AdminOnlyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    username_field = "email"  # tell SimpleJWT to expect email instead of username
 
-    def validate(self, data):
-        email = data.get("email")
-        password = data.get("password")
+    def validate(self, attrs):
+        email = attrs.get("email")
+        password = attrs.get("password")
 
-        if not email or not password:
-            raise serializers.ValidationError("Both email and password are required.")
+        # Check if account exists
+        try:
+            user_obj = User.objects.get(email=email)
+        except User.DoesNotExist:
+            raise serializers.ValidationError("Account does not exist.")
 
+        # Check password
         user = authenticate(username=email, password=password)
         if not user:
             raise serializers.ValidationError("Invalid email or password.")
 
-        data["user"] = user
+        # Check if active
+        if not user.is_active:
+            raise serializers.ValidationError("This account is disabled.")
+
+        # Check if admin
+        if not user.is_superuser:
+            raise serializers.ValidationError("Only admin accounts can login.")
+
+        # ✅ let SimpleJWT create tokens
+        data = super().validate(attrs)
         return data
 
 
@@ -135,11 +147,4 @@ class UserSerializer(serializers.ModelSerializer):
         return instance
 
 
-class AdminOnlyTokenObtainPairSerializer(TokenObtainPairSerializer):
-    def validate(self, attrs):
-        data = super().validate(attrs)
 
-        if not self.user.is_superuser:  # or use self.user.is_staff
-            raise serializers.ValidationError("Only admin  accounts can login.")
-
-        return data

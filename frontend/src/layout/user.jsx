@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import api from "../api"; // axios instance with JWT
+import api from "../services/api"; // axios instance with JWT
 
 export default function UsersPage() {
   const [users, setUsers] = useState([]);

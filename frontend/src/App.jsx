@@ -1,10 +1,11 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Login from "./Login";
-import Signup from "./Signup";
-import ResetRequest from "./ResetRequest";
-import Dashboard from "./Dashboard";
-import ResetPassword from "./ResetPassword";
-import User from "./navbar/user";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import ResetRequest from "./pages/ResetRequest";
+import Dashboard from "./pages/Dashboard";
+import ResetPassword from "./pages/ResetPassword";
+import User from "./layout/user";
+
 
 export default function App() {
   return (

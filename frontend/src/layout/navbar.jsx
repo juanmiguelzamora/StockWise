@@ -12,7 +12,6 @@ export default function Navbar() {
       <div className="flex gap-6">
         <Link to="/dashboard" className="hover:text-blue-400">Dashboard</Link>
         <Link to="/users" className="hover:text-blue-400">Users</Link>
-        <Link to="/settings" className="hover:text-blue-400">Settings</Link>
       </div>
     </nav>
   );

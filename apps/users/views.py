@@ -49,6 +49,7 @@ def generate_jwt(user, hours=24):
     }
     return jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
 
+#---Login ---
 class AdminOnlyTokenObtainPairView(TokenObtainPairView):
     serializer_class = AdminOnlyTokenObtainPairSerializer
 

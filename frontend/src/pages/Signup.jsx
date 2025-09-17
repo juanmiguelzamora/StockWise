@@ -1,58 +1,42 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import api from "../services/api"; // ✅ reuse axios instance
 
 export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState([]);
+  const [errors, setErrors] = useState({});
   const navigate = useNavigate();
 
   const handleSignup = async (e) => {
     e.preventDefault();
 
-    // Frontend validation
+    // 🔹 Frontend validation
     if (!email || !password || !confirmPassword) {
-      setErrors(["⚠️ Please fill in all fields"]);
+      setErrors({ non_field_errors: ["⚠️ Please fill in all fields"] });
       return;
     }
     if (password !== confirmPassword) {
-      setErrors(["⚠️ Passwords do not match"]);
+      setErrors({ password: ["⚠️ Passwords do not match"] });
       return;
     }
 
     setLoading(true);
-    setErrors([]);
+    setErrors({});
 
     try {
-      const res = await fetch("http://localhost:8000/api/v1/users/signup/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          password,
-          re_password: confirmPassword,
-        }),
+      // ✅ use axios instance instead of fetch
+      const res = await api.post("users/signup/", {
+        email,
+        password,
+        re_password: confirmPassword,
       });
 
-      const data = await res.json();
+      const data = res.data;
 
-      if (!res.ok) {
-        let errorList = [];
-        const extractErrors = (obj) => {
-          if (!obj) return;
-          if (Array.isArray(obj)) obj.forEach(extractErrors);
-          else if (typeof obj === "object") Object.values(obj).forEach(extractErrors);
-          else errorList.push(obj);
-        };
-        extractErrors(data);
-        setErrors(errorList.length > 0 ? errorList : ["Signup failed. Please try again."]);
-        setLoading(false);
-        return;
-      }
-
-      // ✅ Save JWT properly (per tab, not global)
+      // ✅ Save JWT if returned
       if (data.access && data.refresh) {
         sessionStorage.setItem("access", data.access);
         sessionStorage.setItem("refresh", data.refresh);
@@ -61,7 +45,11 @@ export default function Signup() {
       // Redirect after successful signup
       navigate("/login");
     } catch (err) {
-      setErrors(["Network error: " + err.message]);
+      if (err.response?.data) {
+        setErrors(err.response.data);
+      } else {
+        setErrors({ non_field_errors: ["Network error: " + err.message] });
+      }
     } finally {
       setLoading(false);
     }
@@ -81,13 +69,11 @@ export default function Signup() {
           <h1 className="text-5xl font-bold mb-2">Create an account</h1>
           <p className="text-gray-500 mb-6">Please enter your details to sign up</p>
 
-          {errors.length > 0 && (
+          {errors.non_field_errors && (
             <div className="bg-red-100 text-red-600 p-3 mb-4 rounded">
-              <ul className="list-disc list-inside space-y-1">
-                {errors.map((err, idx) => (
-                  <li key={idx}>{err}</li>
-                ))}
-              </ul>
+              {errors.non_field_errors.map((err, idx) => (
+                <p key={idx}>{err}</p>
+              ))}
             </div>
           )}
 
@@ -100,6 +86,7 @@ export default function Signup() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
+              {errors.email && <p className="text-red-500 text-sm">{errors.email[0]}</p>}
             </div>
 
             <div>
@@ -110,6 +97,7 @@ export default function Signup() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+              {errors.password && <p className="text-red-500 text-sm">{errors.password[0]}</p>}
             </div>
 
             <div>
@@ -120,6 +108,7 @@ export default function Signup() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
+              {errors.re_password && <p className="text-red-500 text-sm">{errors.re_password[0]}</p>}
             </div>
 
             <button

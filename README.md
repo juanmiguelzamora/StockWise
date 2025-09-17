@@ -1,1 +1,0 @@
-# not_clean_architecture
