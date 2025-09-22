@@ -102,7 +102,6 @@ Future<void> iniatializeServiceLocator() async {
   sl.registerFactory<InventoryProvider>(
     () => InventoryProvider(
       sl<GetInventory>(),
-      sl<GetStockStatus>(),
       sl<GetInventorySummary>(),
     ),
   );

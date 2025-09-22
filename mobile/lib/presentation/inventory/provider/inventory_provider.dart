@@ -2,17 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:mobile/domain/inventory/entity/inventory.dart';
 import 'package:mobile/domain/inventory/entity/inventory_summary.dart';
 import 'package:mobile/domain/inventory/usecases/get_inventory.dart';
-import 'package:mobile/domain/inventory/usecases/get_stock_status.dart';
 import 'package:mobile/domain/inventory/usecases/get_inventory_summary.dart';
 
 class InventoryProvider extends ChangeNotifier {
   final GetInventory getInventoryUseCase;
-  final GetStockStatus getStockStatusUseCase;
   final GetInventorySummary getInventorySummaryUseCase;
 
   InventoryProvider(
     this.getInventoryUseCase,
-    this.getStockStatusUseCase,
     this.getInventorySummaryUseCase,
   );
 
@@ -22,20 +19,22 @@ class InventoryProvider extends ChangeNotifier {
   bool _loading = false;
   bool get loading => _loading;
 
-  // Stock status counts
+  // Stock status filters using backend-provided stock_status field
+  List<Inventory> get outOfStock =>
+      _items.where((i) => i.stockStatus == "out_of_stock").toList();
+
+  List<Inventory> get lowStock =>
+      _items.where((i) => i.stockStatus == "low_stock").toList();
+
+  List<Inventory> get inStock =>
+      _items.where((i) => i.stockStatus == "in_stock").toList();
+
+  // Counts
   int get outOfStockCount => outOfStock.length;
   int get lowStockCount => lowStock.length;
-  int get overStockCount => overStock.length;
+  int get inStockCount => inStock.length;
 
-  // Filtered lists
-  List<Inventory> get outOfStock =>
-      getStockStatusUseCase.filterByStatus(_items, "Out of Stock");
-  List<Inventory> get lowStock =>
-      getStockStatusUseCase.filterByStatus(_items, "Low Stock");
-  List<Inventory> get overStock =>
-      getStockStatusUseCase.filterByStatus(_items, "Overstock");
-
-  // New: Summary
+  // Summary
   InventorySummary? get summary =>
       _items.isEmpty ? null : getInventorySummaryUseCase(_items);
 

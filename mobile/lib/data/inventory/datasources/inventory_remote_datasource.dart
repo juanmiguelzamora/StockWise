@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:mobile/data/inventory/models/inventory_model.dart';
+import 'package:mobile/data/product/models/product_model.dart';
 
 const storage = FlutterSecureStorage();
 
@@ -29,7 +30,7 @@ class InventoryRemoteDataSourceImpl implements InventoryRemoteDataSource {
   Future<List<InventoryModel>> getInventory() async {
     try {
       final response = await http.get(
-        Uri.parse('${baseUrl}inventory/'), // Adjusted to match Django URL
+        Uri.parse('${baseUrl}inventory/'), // main endpoint
         headers: await _getHeaders(),
       );
 

@@ -1,23 +1,29 @@
 class Inventory {
-  final String item;
   final int stockIn;
   final int stockOut;
   final int totalStock;
   final double averageDailySales;
+  final String stockStatus; // add this to match backend
 
   Inventory({
-    required this.item,
     required this.stockIn,
     required this.stockOut,
     required this.totalStock,
     required this.averageDailySales,
+    required this.stockStatus,
   });
 
-  // Derived getter for stock status
-  String get stockStatus {
-    if (totalStock == 0) return "Out of Stock";
-    if (totalStock < 30) return "Low Stock";
-    if (totalStock >= 70) return "Overstock";
-    return "Normal";
+  // Optional derived getter if you want a user-friendly label
+  String get stockLabel {
+    switch (stockStatus) {
+      case "out_of_stock":
+        return "Out of Stock";
+      case "low_stock":
+        return "Low Stock";
+      case "in_stock":
+        return "In Stock";
+      default:
+        return "Unknown";
+    }
   }
 }

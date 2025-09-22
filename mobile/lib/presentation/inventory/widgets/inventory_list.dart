@@ -48,7 +48,6 @@ class _InventoryListState extends State<InventoryList> {
               children: [
                 const Padding(
                   padding: EdgeInsets.all(8.0),
-                  
                 ),
                 ListView.builder(
                   shrinkWrap: true,
@@ -106,45 +105,60 @@ class _InventoryListState extends State<InventoryList> {
 
   /// Card for each inventory item
   Widget _buildInventoryCard(item) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 2,
-      child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-        title: Text(item.item,
-            style: const TextStyle(
-                fontWeight: FontWeight.bold, fontSize: 16)),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("In: ${item.stockIn}, Out: ${item.stockOut}"),
-            Text("Total: ${item.totalStock}"),
-            Text("Avg Daily Sales: ${item.averageDailySales.toStringAsFixed(1)}"),
-          ],
-        ),
-        trailing: Chip(
-          label: Text(item.stockStatus),
-          backgroundColor: item.stockStatus == "Out of Stock"
-              ? Colors.red.shade100
-              : item.stockStatus == "Low Stock"
-                  ? Colors.orange.shade100
-                  : item.stockStatus == "Overstock"
-                      ? Colors.green.shade100
-                      : Colors.blue.shade100,
-          labelStyle: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: item.stockStatus == "Out of Stock"
-                ? Colors.red
-                : item.stockStatus == "Low Stock"
-                    ? Colors.orange
-                    : item.stockStatus == "Overstock"
-                        ? Colors.green
-                        : Colors.blue,
-          ),
+  final statusLabel = _mapStockStatus(item.stockStatus);
+  final statusColor = _mapStockColor(item.stockStatus);
+
+  return Card(
+    margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    elevation: 2,
+    child: ListTile(
+      contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      title: Text(item.product?.name ?? 'Unknown',
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("In: ${item.stockIn}, Out: ${item.stockOut}"),
+          Text("Total: ${item.totalStock}"),
+          Text("Avg Daily Sales: ${item.averageDailySales.toStringAsFixed(1)}"),
+        ],
+      ),
+      trailing: Chip(
+        label: Text(statusLabel),
+        backgroundColor: statusColor.withOpacity(0.2),
+        labelStyle: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: statusColor,
         ),
       ),
-    );
+    ),
+  );
+}
+
+  String _mapStockStatus(String status) {
+    switch (status) {
+      case "out_of_stock":
+        return "Out of Stock";
+      case "low_stock":
+        return "Low Stock";
+      case "in_stock":
+        return "In Stock";
+      default:
+        return "Unknown";
+    }
+  }
+
+  Color _mapStockColor(String status) {
+    switch (status) {
+      case "out_of_stock":
+        return Colors.red;
+      case "low_stock":
+        return Colors.orange;
+      case "in_stock":
+        return Colors.green;
+      default:
+        return Colors.blue;
+    }
   }
 }

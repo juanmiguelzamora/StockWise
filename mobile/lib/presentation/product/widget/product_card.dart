@@ -33,14 +33,20 @@ class ProductCard extends StatelessWidget {
     }
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(12)),
-      child: Text(text, style: TextStyle(color: color, fontWeight: FontWeight.bold)),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(text,
+          style: TextStyle(color: color, fontWeight: FontWeight.bold)),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final status = stockStatusFromQuantity(product.quantity);
+    final totalStock = product.inventory?.totalStock ?? 0;
+    final status = stockStatusFromInventory(product.inventory);
+
     return Card(
       margin: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -52,7 +58,9 @@ class ProductCard extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.network(
-                product.imageUrl.isNotEmpty ? product.imageUrl : 'https://via.placeholder.com/80',
+                product.imageUrl.isNotEmpty
+                    ? product.imageUrl
+                    : 'https://via.placeholder.com/80',
                 width: 80,
                 height: 80,
                 fit: BoxFit.cover,
@@ -69,9 +77,12 @@ class ProductCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(product.name, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  Text(product.name,
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                   SizedBox(height: 4),
-                  Text(product.category, style: TextStyle(color: Colors.grey[600])),
+                  Text(product.category,
+                      style: TextStyle(color: Colors.grey[600])),
                   SizedBox(height: 8),
                   _buildBadge(status),
                 ],
@@ -81,12 +92,17 @@ class ProductCard extends StatelessWidget {
             Column(
               children: [
                 IconButton(
-                  onPressed: () => onIncrement(),
+                  onPressed: onIncrement,
                   icon: Icon(Icons.add_circle_outline),
                 ),
-                Text(product.quantity.toString(), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(
+                  "$totalStock",
+                  style: TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold),
+                ),
                 IconButton(
-                  onPressed: product.quantity == 0 ? null : () => onDecrement(),
+                  onPressed:
+                      totalStock == 0 ? null : onDecrement,
                   icon: Icon(Icons.remove_circle_outline),
                 ),
               ],

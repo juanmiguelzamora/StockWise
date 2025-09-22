@@ -1,29 +1,33 @@
-// lib/domain/entities/product.dart
-/// Domain entity representing a product.
-///
-/// This is the core business object used across the domain and presentation layers.
+import 'package:mobile/domain/inventory/entity/inventory.dart';
+
 class Product {
   final String sku;
   final String name;
   final String category;
-  final int quantity;
   final String imageUrl;
+  final Inventory? inventory;
 
   Product({
     required this.sku,
     required this.name,
     required this.category,
-    required this.quantity,
     required this.imageUrl,
+    this.inventory,
   });
 
-  Product copyWith({int? quantity}) {
+  Product copyWith({
+    String? sku,
+    String? name,
+    String? category,
+    String? imageUrl,
+    Inventory? inventory,
+  }) {
     return Product(
-      sku: sku,
-      name: name,
-      category: category,
-      quantity: quantity ?? this.quantity,
-      imageUrl: imageUrl,
+      sku: sku ?? this.sku,
+      name: name ?? this.name,
+      category: category ?? this.category,
+      imageUrl: imageUrl ?? this.imageUrl,
+      inventory: inventory ?? this.inventory,
     );
   }
 }
@@ -31,7 +35,8 @@ class Product {
 /// StockStatus enum used by the UI to show a badge.
 enum StockStatus { inStock, lowStock, outOfStock }
 
-StockStatus stockStatusFromQuantity(int q) {
+StockStatus stockStatusFromInventory(Inventory? inv) {
+  final q = inv?.totalStock ?? 0;
   if (q == 0) return StockStatus.outOfStock;
   if (q <= 10) return StockStatus.lowStock; // business rule for low stock
   return StockStatus.inStock;

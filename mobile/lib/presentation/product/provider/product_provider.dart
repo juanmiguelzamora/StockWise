@@ -48,7 +48,8 @@ class ProductProvider extends ChangeNotifier {
 
     if (_statusFilter != null) {
       result = result
-          .where((p) => stockStatusFromQuantity(p.quantity) == _statusFilter)
+          .where((p) =>
+              stockStatusFromInventory(p.inventory) == _statusFilter)
           .toList();
     }
 
@@ -97,7 +98,8 @@ class ProductProvider extends ChangeNotifier {
     final idx = _products.indexWhere((p) => p.sku == sku);
     if (idx == -1) return;
     final current = _products[idx];
-    final newQty = current.quantity + 1;
+    final currentQty = current.inventory?.totalStock ?? 0;
+    final newQty = currentQty + 1;
 
     try {
       final updated = await updateQuantityUseCase(sku, newQty);
@@ -113,7 +115,8 @@ class ProductProvider extends ChangeNotifier {
     final idx = _products.indexWhere((p) => p.sku == sku);
     if (idx == -1) return;
     final current = _products[idx];
-    final newQty = current.quantity - 1;
+    final currentQty = current.inventory?.totalStock ?? 0;
+    final newQty = currentQty - 1;
     if (newQty < 0) return;
 
     try {
