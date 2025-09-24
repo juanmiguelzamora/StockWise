@@ -20,6 +20,7 @@ import 'package:mobile/domain/inventory/usecases/get_inventory.dart';
 import 'package:mobile/domain/inventory/usecases/get_inventory_summary.dart';
 import 'package:mobile/domain/inventory/usecases/get_stock_status.dart';
 import 'package:mobile/domain/product/repository/product_repository.dart';
+import 'package:mobile/domain/product/usecases/get_product_by_sku.dart';
 import 'package:mobile/domain/product/usecases/get_product_usecase.dart';
 import 'package:mobile/domain/product/usecases/update_product_quantity_usecase.dart';
 import 'package:mobile/presentation/ai_assistant/ai_provider.dart';
@@ -29,7 +30,8 @@ import 'package:mobile/presentation/product/provider/product_provider.dart';
 final sl = GetIt.instance;
 
 Future<void> iniatializeServiceLocator() async {
-  const baseUrl = "http://192.168.100.16:8000/api/";  // Updated to Django backend
+  //https://6a801b5bf296.ngrok-free.app 
+  const baseUrl = "https://6a801b5bf296.ngrok-free.app/api/";  // Updated to Django backend
   // ========================
   //  AUTH
   // ========================
@@ -140,6 +142,11 @@ Future<void> iniatializeServiceLocator() async {
 
   sl.registerLazySingleton<UpdateProductQuantityUseCase>(
     () => UpdateProductQuantityUseCase(sl<ProductRepository>()),
+  );
+
+  
+  sl.registerLazySingleton<GetProductBySku>(
+    () => GetProductBySku(sl<ProductRepository>()),
   );
 
   // Provider

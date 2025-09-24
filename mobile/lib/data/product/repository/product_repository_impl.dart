@@ -20,4 +20,10 @@ class ProductRepositoryImpl implements ProductRepository {
     final ProductModel updated = await remoteDataSource.updateQuantity(sku, newQuantity);
     return updated;
   }
+
+  @override
+  Future<Product> getProductBySku(String sku) async {
+    final model = await remoteDataSource.fetchProductBySku(sku);
+    return model;
+  }
 }

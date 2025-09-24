@@ -59,4 +59,26 @@ class ProductRemoteDataSource {
       throw Exception('Failed to update product: ${response.statusCode} ${response.body}');
     }
   }
+
+   /// GET /api/products/{sku}/
+  Future<ProductModel> fetchProductBySku(String sku) async {
+    final token = await _getToken();
+    final uri = Uri.parse('${baseUrl}products/$sku/');
+
+    final response = await client.get(
+      uri,
+      headers: {
+        'Accept': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final decoded = json.decode(response.body) as Map<String, dynamic>;
+      return ProductModel.fromJson(decoded);
+    } else {
+      throw Exception(
+          'Failed to load product $sku: ${response.statusCode} ${response.body}');
+    }
+  }
 }

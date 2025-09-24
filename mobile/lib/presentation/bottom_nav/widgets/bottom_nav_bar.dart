@@ -9,42 +9,24 @@ class BottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BottomAppBar(
-      shape: const CircularNotchedRectangle(),
-      notchMargin: 8,
-      child: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _mapItemToIndex(selectedItem),
-        onTap: (index) {
-          if (index == 2) return; // Skip FAB placeholder
-          final adjustedIndex = index > 2 ? index - 1 : index;
-          final item = _mapIndexToItem(adjustedIndex);
-          context.read<NavCubit>().selectTab(item);
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.show_chart),
-            label: 'Stocks',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.qr_code_scanner, color: Colors.transparent),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.smart_toy),
-            label: 'AI Assistant',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-      ),
+    return BottomNavigationBar(
+      type: BottomNavigationBarType.fixed,
+      currentIndex: _mapItemToIndex(selectedItem),
+      onTap: (index) {
+        if (index == 2) return; // Skip FAB placeholder
+        final adjustedIndex = index > 2 ? index - 1 : index;
+        final item = _mapIndexToItem(adjustedIndex);
+        context.read<NavCubit>().selectTab(item);
+      },
+      items: const [
+        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+        BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Stocks'),
+        BottomNavigationBarItem(icon: Icon(Icons.qr_code_scanner, color: Colors.transparent), label: ''),
+        BottomNavigationBarItem(icon: Icon(Icons.smart_toy), label: 'AI Assistant'),
+        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+      ],
     );
+
   }
 
   int _mapItemToIndex(NavItem item) {

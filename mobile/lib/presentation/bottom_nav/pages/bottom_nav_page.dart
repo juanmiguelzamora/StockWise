@@ -6,6 +6,7 @@ import 'package:mobile/presentation/Profile/pages/profile_page.dart';
 import 'package:mobile/presentation/ai_assistant/pages/ai_page.dart';
 import 'package:mobile/presentation/home/pages/home.dart';
 import 'package:mobile/presentation/product/pages/product_list_page.dart';
+import 'package:mobile/presentation/qr_scanner/pages/qr_scanner_page.dart';
 //import 'package:mobile/presentation/stocks/stocks_page.dart';
 // import 'package:mobile/presentation/assistant/assistant_page.dart';
 // import 'package:mobile/presentation/profile/profile_page.dart';
@@ -28,8 +29,10 @@ class BottomNavPage extends StatelessWidget {
           };
 
           void onFabPressed() {
-            // TODO: Implement scanner navigation later
-            // AppNavigator.push(context, const ScannerScreen());
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const QrScannerPage()),
+            );
           }
 
           return Scaffold(
