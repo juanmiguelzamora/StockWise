@@ -1,133 +1,119 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/domain/product/entity/product.dart';
-import 'package:mobile/domain/product/usecases/get_product_by_sku.dart';
-import 'package:mobile/domain/product/usecases/update_product_quantity_usecase.dart';
+import 'package:get_it/get_it.dart';
+import 'package:mobile/presentation/qr_scanner/controllers/qr_scanner_controller.dart';
 
-class ProductPopup extends StatefulWidget {
-  final String sku;
-  final GetProductBySku getProductBySku;
-  final UpdateProductQuantityUseCase updateQuantity;
+class ProductPopup extends StatelessWidget {
+  final QrScannerState state;
+  final VoidCallback onStockIn;
+  final VoidCallback onStockOut;
+  final VoidCallback onClose;
+  final VoidCallback onIncrement;  // New: for local adjustment
+  final VoidCallback onDecrement;  // New: for local adjustment
 
   const ProductPopup({
     super.key,
-    required this.sku,
-    required this.getProductBySku,
-    required this.updateQuantity,
+    required this.state,
+    required this.onStockIn,
+    required this.onStockOut,
+    required this.onClose,
+    required this.onIncrement,  // New
+    required this.onDecrement,  // New
   });
 
   @override
-  State<ProductPopup> createState() => _ProductPopupState();
-}
-
-class _ProductPopupState extends State<ProductPopup> {
-  Product? product;
-  int quantity = 0;
-  bool loading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchProduct();
-  }
-
-  Future<void> _fetchProduct() async {
-    try {
-      print("🔍 Fetching product for SKU: ${widget.sku}");
-      final fetched = await widget.getProductBySku(widget.sku);
-      setState(() {
-        product = fetched;
-        quantity = fetched.inventory?.totalStock ?? 0;
-        loading = false;
-      });
-      print("✅ Product fetched: ${product?.name}, stock=$quantity");
-    } catch (e) {
-      print("❌ Error fetching product: $e");
-      setState(() => loading = false);
-    }
-  }
-
-  Future<void> _updateStock(bool isStockIn) async {
-    final newQuantity = isStockIn ? quantity + 1 : quantity - 1;
-    if (newQuantity < 0) return;
-
-    try {
-      print("🔄 Updating stock for ${widget.sku} → $newQuantity");
-      final updated = await widget.updateQuantity(widget.sku, newQuantity);
-      setState(() {
-        product = updated;
-        quantity = updated.inventory?.totalStock ?? 0;
-      });
-
-      // ✅ Snackbar confirmation
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              "✅ Stock updated: now $quantity",
-              style: const TextStyle(color: Colors.white),
-            ),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
-
-      print("✅ Stock updated: now $quantity");
-    } catch (e) {
-      print("❌ Error updating stock: $e");
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("❌ Failed to update stock"),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    if (loading) {
+    if (state.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    return AlertDialog(
-      title: Text(product?.name ?? "Product"),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (product?.imageUrl.isNotEmpty ?? false)
-            Image.network(product!.imageUrl, height: 100),
-          Text("Stock Status: ${product?.inventory?.stockStatus ?? ''}"),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton(
-                onPressed: quantity > 0
-                    ? () => setState(() => quantity--)
-                    : null,
-                icon: const Icon(Icons.remove),
-              ),
-              Text("$quantity"),
-              IconButton(
-                onPressed: () => setState(() => quantity++),
-                icon: const Icon(Icons.add),
-              ),
-            ],
-          ),
-        ],
+    final String mediaBaseUrl = GetIt.instance.get<String>(instanceName: "mediaBaseUrl");
+    final product = state.product;
+
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              product?.name ?? "Product",
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 16),
+            if ((product?.imageUrl ?? '').isNotEmpty)
+            Builder(builder: (context) {
+                final imageUrl = product!.imageUrl.startsWith('http')
+                    ? product.imageUrl
+                    : '$mediaBaseUrl${product.imageUrl}';
+                final uri = Uri.tryParse(imageUrl);
+                if (uri != null && (uri.scheme == 'http' || uri.scheme == 'https') && uri.host.isNotEmpty) {
+                  return Image.network(
+                    imageUrl,
+                    height: 100,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      height: 100,
+                      color: Colors.grey[300],
+                      child: const Icon(Icons.image_not_supported, size: 50),
+                    ),
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        height: 100,
+                        child: const Center(child: CircularProgressIndicator()),
+                      );
+                    },
+                  );
+                }
+                return Container(
+                  height: 100,
+                  color: Colors.grey[300],
+                  child: const Icon(Icons.image_not_supported, size: 50),
+                );
+              }),
+            Text("Stock Status: ${product?.inventory?.stockStatus ?? ''}"),
+            const SizedBox(height: 8),
+            Text("Current Stock: ${state.totalQuantity}"),  // New: show live total separately
+            const SizedBox(height: 8),
+            Text("Adjustment Amount:"),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  onPressed: state.adjustment > 0 ? onDecrement : null,  // Calls local decrement
+                  icon: const Icon(Icons.remove),
+                ),
+                Text("${state.adjustment}"),
+                IconButton(
+                  onPressed: onIncrement,  // Calls local increment
+                  icon: const Icon(Icons.add),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: (state.adjustment > 0) ? onStockOut : null,  // Disable if adjustment == 0 (optional)
+                  child: const Text("Stock Out"),
+                ),
+                ElevatedButton(
+                  onPressed: (state.adjustment > 0) ? onStockIn : null,  // Disable if adjustment == 0 (optional)
+                  child: const Text("Stock In"),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: onClose,
+              child: const Text("Close"),
+            ),
+          ],
+        ),
       ),
-      actions: [
-        ElevatedButton(
-          onPressed: () => _updateStock(false),
-          child: const Text("Stock Out"),
-        ),
-        ElevatedButton(
-          onPressed: () => _updateStock(true),
-          child: const Text("Stock In"),
-        ),
-      ],
     );
   }
 }

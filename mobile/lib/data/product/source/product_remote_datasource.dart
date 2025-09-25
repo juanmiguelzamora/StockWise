@@ -13,7 +13,7 @@ class ProductRemoteDataSource {
 
   ///Helper: get stored JWT token
   Future<String?> _getToken() async {
-    return await storage.read(key: 'access_token'); // ✅ matches AuthApiService
+    return await storage.read(key: 'access_token');
   }
 
   /// GET /api/products/

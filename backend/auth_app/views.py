@@ -1,6 +1,7 @@
-from rest_framework import generics, status
+from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny
 from .serializers import RegisterSerializer, UserSerializer
 from .models import User
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -31,6 +32,7 @@ class RegisterView(generics.CreateAPIView):
 
 class UserView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated]
+    #permission_classes = [AllowAny]
     serializer_class = UserSerializer
 
     def get_object(self):
@@ -38,6 +40,7 @@ class UserView(generics.RetrieveAPIView):
 
 
 class PasswordResetConfirmView(generics.GenericAPIView):
+    permission_classes = [AllowAny]
     def get(self, request, token):
         try:
             reset_token = ResetPasswordToken.objects.get(key=token)

@@ -1,8 +1,10 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:mobile/presentation/qr_scanner/controllers/qr_scanner_controller.dart';
 import 'package:mobile/presentation/qr_scanner/widget/product_popup.dart';
-import 'package:mobile/domain/product/usecases/get_product_by_sku.dart';
-import 'package:mobile/domain/product/usecases/update_product_quantity_usecase.dart'; // ✅ fixed import
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:mobile/domain/product/usecases/get_product_by_sku.dart';
+import 'package:mobile/domain/product/usecases/update_product_quantity_usecase.dart';
 import 'package:get_it/get_it.dart';
 
 class QrScannerPage extends StatefulWidget {
@@ -13,39 +15,72 @@ class QrScannerPage extends StatefulWidget {
 }
 
 class _QrScannerPageState extends State<QrScannerPage> {
-  bool _isProcessing = false;
+  late final QrScannerController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = QrScannerController(
+      mobileScannerController: MobileScannerController(),
+      getProductBySku: GetIt.I<GetProductBySku>(),
+      updateQuantity: GetIt.I<UpdateProductQuantityUseCase>(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final cameraSize = screenWidth * 0.8;
+
     return Scaffold(
       appBar: AppBar(title: const Text("Scan Product")),
-      body: MobileScanner(
-        onDetect: (capture) async {
-          if (_isProcessing) return;
-          _isProcessing = true;
-
-          final sku = capture.barcodes.first.rawValue;
-          if (sku != null) {
-            print("📷 QR scanned: $sku");
-
-            // ✅ Pull correct dependencies from GetIt
-            final getProductBySku = GetIt.I<GetProductBySku>();
-            final updateQuantity = GetIt.I<UpdateProductQuantityUseCase>();
-
-            await showDialog(
-              context: context,
-              builder: (_) => ProductPopup(
-                sku: sku,
-                getProductBySku: getProductBySku,
-                updateQuantity: updateQuantity,
+      body: ValueListenableBuilder<QrScannerState>(
+        valueListenable: _controller,
+        builder: (context, state, child) {
+          return Stack(
+            children: [
+              Center(
+                child: Container(
+                  width: cameraSize,
+                  height: cameraSize,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                  ),
+                  child: MobileScanner(
+                    controller: _controller.mobileScannerController,
+                    onDetect: (capture) => _controller.handleQrCode(capture),
+                  ),
+                ),
               ),
-            );
-
-            // ✅ Reset flag when dialog closes
-            _isProcessing = false;
-          } else {
-            _isProcessing = false;
-          }
+              if (state.showPopup)
+                BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                  child: Container(
+                    color: Colors.black.withOpacity(0.3),
+                  ),
+                ),
+              if (state.showPopup && state.sku != null)
+                Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: screenWidth * 0.8),
+                    child: ProductPopup(
+                      state: state,
+                      onStockIn: () => _controller.updateStock(true),
+                      onStockOut: () => _controller.updateStock(false),
+                      onClose: _controller.closePopup,
+                      onIncrement: _controller.incrementAdjustment,  
+                      onDecrement: _controller.decrementAdjustment,  
+                    ),
+                  ),
+                ),
+            ],
+          );
         },
       ),
     );

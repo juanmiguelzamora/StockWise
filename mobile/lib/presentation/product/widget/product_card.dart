@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/domain/product/entity/product.dart';
+import 'package:get_it/get_it.dart';
 
-/// A single card showing product details, quantity counter and stock badge.
+/// A single card showing product details, quantity counter, and stock badge.
 class ProductCard extends StatelessWidget {
   final Product product;
   final VoidCallback onIncrement;
@@ -37,8 +38,10 @@ class ProductCard extends StatelessWidget {
         color: color.withOpacity(0.12),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Text(text,
-          style: TextStyle(color: color, fontWeight: FontWeight.bold)),
+      child: Text(
+        text,
+        style: TextStyle(color: color, fontWeight: FontWeight.bold),
+      ),
     );
   }
 
@@ -46,6 +49,8 @@ class ProductCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final totalStock = product.inventory?.totalStock ?? 0;
     final status = stockStatusFromInventory(product.inventory);
+    // Retrieve mediaBaseUrl from GetIt
+    final String mediaBaseUrl = GetIt.instance.get<String>(instanceName: "mediaBaseUrl");
 
     return Card(
       margin: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
@@ -57,19 +62,48 @@ class ProductCard extends StatelessWidget {
             // Image (network)
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                product.imageUrl.isNotEmpty
-                    ? product.imageUrl
-                    : 'https://via.placeholder.com/80',
-                width: 80,
-                height: 80,
-                fit: BoxFit.cover,
-                errorBuilder: (c, e, s) => Container(
-                  width: 80,
-                  height: 80,
-                  color: Colors.grey[300],
-                  child: Icon(Icons.image_not_supported),
-                ),
+              child: Builder(
+                builder: (context) {
+                  // Construct full URL if not absolute
+                  final imageUrl = product.imageUrl.isNotEmpty
+                      ? (product.imageUrl.startsWith('http')
+                          ? product.imageUrl
+                          : '$mediaBaseUrl${product.imageUrl}')
+                      : 'https://via.placeholder.com/80';
+                  final uri = Uri.tryParse(imageUrl);
+                  if (uri != null && (uri.scheme == 'http' || uri.scheme == 'https') && uri.host.isNotEmpty) {
+                    return Image.network(
+                      imageUrl,
+                      width: 80,
+                      height: 80,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        print("❌ Image load error: $error");
+                        return Container(
+                          width: 80,
+                          height: 80,
+                          color: Colors.grey[300],
+                          child: Icon(Icons.image_not_supported),
+                        );
+                      },
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          width: 80,
+                          height: 80,
+                          child: Center(child: CircularProgressIndicator()),
+                        );
+                      },
+                    );
+                  }
+                  print("❌ Invalid image URL: $imageUrl");
+                  return Container(
+                    width: 80,
+                    height: 80,
+                    color: Colors.grey[300],
+                    child: Icon(Icons.image_not_supported),
+                  );
+                },
               ),
             ),
             SizedBox(width: 12),
@@ -77,12 +111,15 @@ class ProductCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(product.name,
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  Text(
+                    product.name,
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
                   SizedBox(height: 4),
-                  Text(product.category,
-                      style: TextStyle(color: Colors.grey[600])),
+                  Text(
+                    product.category,
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
                   SizedBox(height: 8),
                   _buildBadge(status),
                 ],
@@ -97,16 +134,14 @@ class ProductCard extends StatelessWidget {
                 ),
                 Text(
                   "$totalStock",
-                  style: TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 IconButton(
-                  onPressed:
-                      totalStock == 0 ? null : onDecrement,
+                  onPressed: totalStock == 0 ? null : onDecrement,
                   icon: Icon(Icons.remove_circle_outline),
                 ),
               ],
-            )
+            ),
           ],
         ),
       ),
