@@ -159,7 +159,6 @@ class PasswordResetConfirmView(APIView):
 
 
 # --- Custom Permission ---
-
 class IsSuperuserOrReadOnlyForStaff(permissions.BasePermission):
     """
     Superusers: full access
@@ -181,7 +180,6 @@ class IsSuperuserOrReadOnlyForStaff(permissions.BasePermission):
         return False
 
 # --- User ViewSet ---
-
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer

@@ -1,0 +1,70 @@
+[
+  {
+    "id": 1,
+    "name": "Wireless Headphones",
+    "stock": 1,
+    "change": 2,
+    "date": "2025-09-21",
+    "image": "/media/Headphone.png"
+  },
+  {
+    "id": 2,
+    "name": "Wireless Headphones",
+    "stock": 1,
+    "change": 2,
+    "date": "2025-09-20",
+    "image": "/media/Headphone.png"
+  },
+{
+    "id": 3,
+    "name": "Wireless Headphones",
+    "stock": 1,
+    "change": 1,
+    "date": "2025-09-19",
+    "image": "/media/Headphone.png"
+  },
+  {
+    "id": 4,
+    "name": "Wireless Headphones",
+    "stock": 1,
+    "change": -2,
+    "date": "2025-09-20",
+    "image": "/media/Headphone.png"
+  },
+  {
+    "id": 5,
+    "name": "Wireless Headphones",
+    "stock": 1,
+    "change": -2,
+    "date": "2025-09-22",
+    "image": "/media/Headphone.png"
+  },
+
+   {
+    "id": 6,
+    "name": "Wireless Headphones",
+    "stock": 1,
+    "change": -2,
+    "date": "2025-09-20",
+    "image": "/media/Headphone.png"
+  },
+   {
+    "id": 7,
+    "name": "Wireless Headphones",
+    "stock": 1,
+    "change": -2,
+    "date": "2025-09-20",
+    "image": "/media/Headphone.png"
+  },
+   {
+    "id": 8,
+    "name": "Wireless Headphones",
+    "stock": 1,
+    "change": 10,
+    "date": "2025-09-22",
+    "image": "/media/Headphone.png"
+  }
+  
+  
+  
+]

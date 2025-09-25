@@ -1,12 +1,19 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useId } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 import LoadingSpinner from "../components/ui/LoadingSpinner";
-import api, { getCSRFToken } from "../services/api";
 import Navbar from "../layout/navbar";
 
-
-export default function Protected() {
+export default function ProtectedDashboard() {
   const [items, setItems] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [query, setQuery] = useState("");
@@ -15,20 +22,36 @@ export default function Protected() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // Fetch items from backend
+  const gradientIdIn = useId();
+  const gradientIdOut = useId();
+
+  // Helper to format date: Today or YYYY-MM-DD
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    const today = new Date();
+    if (
+      date.getFullYear() === today.getFullYear() &&
+      date.getMonth() === today.getMonth() &&
+      date.getDate() === today.getDate()
+    ) {
+      return "Today";
+    }
+    return dateStr;
+  };
+
+  // Fetch items
   useEffect(() => {
     let mounted = true;
     const fetchItems = async () => {
       setLoading(true);
       setError("");
       try {
-        const token = await auth.currentUser?.getIdToken(true);
-        const res = await api.get("/api/items/", {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
+        const res = await fetch("/items.json");
+        const data = await res.json();
         if (!mounted) return;
-        setItems(res.data || []);
-        setFiltered(res.data || []);
+        setItems(data || []);
+        setFiltered(data || []);
       } catch (err) {
         console.error(err);
         setError("Failed to load items");
@@ -37,12 +60,10 @@ export default function Protected() {
       }
     };
     fetchItems();
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, []);
 
-  // Debounced filter
+  // Search filter
   useEffect(() => {
     if (query === "") {
       setFiltered(items);
@@ -63,23 +84,58 @@ export default function Protected() {
     return () => clearTimeout(id);
   }, [query, items]);
 
-  const total = useMemo(() => items.length, [items]);
-  const visible = useMemo(() => filtered.length, [filtered]);
+  // Get latest date from items
+  const latestDate = useMemo(() => {
+    if (items.length === 0) return null;
+    return items.reduce((max, item) => (item.date > max ? item.date : max), items[0].date);
+  }, [items]);
 
-  const handleBackendLogout = async () => {
+  // Filter items for latest date
+  const todayChanges = useMemo(() => {
+    if (!latestDate) return [];
+    return items.filter(item => item.date === latestDate);
+  }, [items, latestDate]);
+
+  // Helper to get weekday name from date
+ // Helper to get weekday name
+const getWeekday = (dateStr) => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString("en-US", { weekday: "short" }); // Mon, Tue, ...
+};
+
+// Prepare stock data grouped by weekdays (Mon–Sun)
+const stockData = useMemo(() => {
+  if (!items.length) return [];
+
+  const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const grouped = {};
+
+  // Initialize all days with 0
+  weekdays.forEach(day => {
+    grouped[day] = { in: 0, out: 0 };
+  });
+
+  // Sum values by weekday
+  items.forEach(item => {
+    const day = getWeekday(item.date);
+    if (!grouped[day]) grouped[day] = { in: 0, out: 0 };
+    if (item.change > 0) grouped[day].in += item.change;
+    if (item.change < 0) grouped[day].out += Math.abs(item.change);
+  });
+
+  // Return ordered data Mon → Sun
+  return weekdays.map(day => ({
+    day,
+    in: grouped[day].in,
+    out: grouped[day].out,
+    full: grouped[day].in + grouped[day].out,
+  }));
+}, [items]);
+
+  const handleLogout = async () => {
     try {
-      try {
-        const token = await auth.currentUser?.getIdToken(true);
-        const csrf = await getCSRFToken();
-        await api.post(
-          "/auth/logout/",
-          { idToken: token },
-          { headers: { "Content-Type": "application/json", "X-CSRFToken": csrf } }
-        );
-      } catch (err) {
-        console.warn("Backend logout failed:", err);
-      }
-      await signOut(auth);
+      localStorage.removeItem("access");
+      localStorage.removeItem("refresh");
       navigate("/login");
     } catch (err) {
       console.error("Logout error:", err);
@@ -89,99 +145,115 @@ export default function Protected() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="h-screen flex items-center justify-center bg-white">
         <LoadingSpinner size="lg" text="Loading items..." />
       </div>
     );
   }
 
+  if (error) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-white">
+        <p className="text-red-500 text-lg">{error}</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Navbar at the top */}
-      <Navbar onLogout={handleBackendLogout} />
+    <div className="h-screen bg-gray-100 flex flex-col">
+      <Navbar
+        onLogout={handleLogout}
+        className="bg-white shadow-sm border-b border-gray-200"
+      />
 
-      <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">StockWises Dashboard</h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            {visible} of {total} items shown
-          </p>
-        </div>
+<div className="flex-1 overflow-y-auto lg:overflow-hidden px-6 py-6 max-w-7xl mx-auto w-full pt-20">
+        {/* Top Summary Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-gradient-to-r from-green-400 to-green-500 text-white p-5 rounded-xl flex flex-col">
+            <p className="text-sm opacity-90">
+              Latest Change ({formatDate(latestDate)})
+            </p>
+            <h3 className="text-3xl font-bold mt-2">
+              {todayChanges.reduce((acc, item) => acc + (item.change || 0), 0)}
+            </h3>
+            <p className="text-xs opacity-80">Total Change</p>
+          </div>
 
-        {/* Search box */}
-        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-5 mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <label className="sr-only" htmlFor="search">Search items</label>
-            <div className="relative flex-1">
-              <input
-                id="search"
-                type="search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search by name, SKU or description..."
-                className="w-full border border-gray-200 dark:border-gray-700 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-              />
-              {searching && (
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-500">Searching…</div>
-              )}
-            </div>
-            <button
-              onClick={() => { setQuery(""); setFiltered(items); }}
-              className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md"
-            >
-              Clear
-            </button>
+          <div className="bg-gradient-to-r from-blue-400 to-blue-500 text-white p-5 rounded-xl flex flex-col">
+            <p className="text-sm opacity-90">Total Items</p>
+            <h3 className="text-3xl font-bold mt-2">{items.length}</h3>
+            <p className="text-xs opacity-80">All Products</p>
+          </div>
+
+          <div className="bg-black text-white p-5 rounded-xl flex flex-col">
+            <p className="text-sm opacity-90">Overstock</p>
+            <h3 className="text-3xl font-bold mt-2">
+              {items.filter(i => i.stock > 500).length}
+            </h3>
+            <p className="text-xs opacity-80">High Stock</p>
+          </div>
+
+          <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-white p-5 rounded-xl flex flex-col">
+            <p className="text-sm opacity-90">Low Stock Alert</p>
+            <h3 className="text-3xl font-bold mt-2">
+              {items.filter(i => i.stock > 0 && i.stock <= 10).length}
+            </h3>
+            <p className="text-xs opacity-80">Critical</p>
           </div>
         </div>
 
-        {/* Error message */}
-        {error && (
-          <div className="mb-4 p-3 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700">
-            {error}
-          </div>
-        )}
-
-        {/* Items grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.length ? (
-            filtered.map((item) => (
-              <div key={item.id || item.pk || item.sku || Math.random()} className="bg-white dark:bg-gray-800 shadow rounded-lg p-4">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      {item.name || item.title || "Untitled"}
-                    </h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                      {item.description ? item.description.slice(0, 120) : "No description"}
-                    </p>
-                    <div className="mt-3 text-sm text-gray-600 dark:text-gray-300">
-                      <span className="font-medium">SKU:</span> {item.sku || "—"}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                      {item.quantity ?? item.stock ?? 0}
-                    </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">in stock</div>
-                  </div>
-                </div>
-
-                <div className="mt-4 flex items-center justify-between gap-2">
-                  <div className="text-sm text-gray-700 dark:text-gray-300 font-medium">
-                    ${Number(item.price ?? item.unit_price ?? 0).toFixed(2)}
-                  </div>
-                  <div className="flex gap-2">
-                    <button className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md">View</button>
-                    <button className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md">Edit</button>
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="col-span-full bg-white dark:bg-gray-800 shadow rounded-lg p-6 text-center text-gray-600 dark:text-gray-400">
-              No items match your search.
+        {/* Chart + History */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm">
+            <h2 className="text-lg font-semibold text-black mb-4">Stock Movement</h2>
+            <div className="h-[260px] sm:h-[300px] lg:h-[360px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={stockData} barCategoryGap="30%">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="day" stroke="#9ca3af" />
+                  <YAxis stroke="#9ca3af" />
+                  <Tooltip contentStyle={{ borderRadius: "8px" }} />
+                  <defs>
+                    <linearGradient id="stockIn" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#22c55e" stopOpacity={0.8} />
+                      <stop offset="100%" stopColor="#22c55e" stopOpacity={0.2} />
+                    </linearGradient>
+                    <linearGradient id="stockOut" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#ef4444" stopOpacity={0.8} />
+                      <stop offset="100%" stopColor="#ef4444" stopOpacity={0.2} />
+                    </linearGradient>
+                  </defs>
+                  <Bar dataKey="in" radius={[6, 6, 0, 0]} fill="url(#stockIn)" />
+                  <Bar dataKey="out" radius={[6, 6, 0, 0]} fill="url(#stockOut)" />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
-          )}
+          </div>
+
+          <div className="bg-white p-6 rounded-xl shadow-sm max-h-[400px] overflow-y-auto">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">History</h2>
+            <ul className="space-y-4">
+              {filtered.map((item) => (
+                <li key={`${item.id}-${item.date}`} className="flex justify-between items-center text-sm">
+                  <div className="flex items-center gap-3">
+                    {item.image && (
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-10 h-10 object-cover rounded"
+                      />
+                    )}
+                    <span className="text-gray-700 font-medium">
+                      {item.name} ({formatDate(item.date)})
+                    </span>
+                  </div>
+                  <span className={`font-bold ${item.change > 0 ? "text-green-500" : "text-red-500"}`}>
+                    {item.change > 0 ? `+${item.change}` : item.change}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </div>
