@@ -1,0 +1,47 @@
+[
+    {
+        "id": 1,
+        "product_img": "https://example.com/images/phone.jpg",
+        "product": "Phone",
+        "status": "In Stock",
+        "price": 699.99,
+        "quantity": 50,
+        "category": "Electronics"
+    },
+    {
+        "id": 2,
+        "product_img": "https://example.com/images/laptop.jpg",
+        "product": "Laptop",
+        "status": "Out of Stock",
+        "price": 999.99,
+        "quantity": 0,
+        "category": "Electronics"
+    },
+    {
+        "id": 3,
+        "product_img": "https://example.com/images/headphones.jpg",
+        "product": "Headphones",
+        "status": "In Stock",
+        "price": 199.99,
+        "quantity": 200,
+        "category": "Accessories"
+    },
+    {
+        "id": 4,
+        "product_img": "https://example.com/images/smartwatch.jpg",
+        "product": "Smartwatch",
+        "status": "In Stock",
+        "price": 299.99,
+        "quantity": 75,
+        "category": "Wearables"
+    },
+    {
+        "id": 5,
+        "product_img": "https://example.com/images/tablet.jpg",
+        "product": "Tablet",
+        "status": "In Stock",
+        "price": 499.99,
+        "quantity": 30,
+        "category": "Electronics"
+    }
+]
