@@ -163,7 +163,6 @@ class HomeScreen extends StatelessWidget {
                   ],
                 ),
                 SizedBox(height: screenHeight * 0.02),
-                // Detailed history items (with images)
                 _HistoryItem(
                   imagePath: 'assets/headphones.png',
                   title: 'Wireless Headphones',
@@ -244,33 +243,6 @@ class HomeScreen extends StatelessWidget {
                   changeColor: Colors.green,
                   fontMedium: fontMedium,
                   fontSmall: fontSmall,
-                ),
-                SizedBox(height: screenHeight * 0.03),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    "Stock In History",
-                    style: TextStyle(
-                      fontSize: fontMedium,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                SizedBox(height: screenHeight * 0.02),
-                Column(
-                  children: List.generate(
-                    15,
-                    (index) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _HistoryCard(
-                        title: "Item ${index + 1}",
-                        subtitle: "Stocked on Jul ${index + 1}, 2025",
-                        quantity: "${(index + 1) * 5}",
-                        fontMedium: fontMedium,
-                        fontSmall: fontSmall,
-                      ),
-                    ),
-                  ),
                 ),
               ],
             ),
@@ -391,55 +363,6 @@ class HomeScreen extends StatelessWidget {
             style: TextStyle(
               color: changeColor,
               fontSize: fontMedium,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _HistoryCard({
-    required String title,
-    required String subtitle,
-    required String quantity,
-    required double fontMedium,
-    required double fontSmall,
-  }) {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: fontMedium,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: TextStyle(
-                  fontSize: fontSmall,
-                  color: Colors.grey[700],
-                ),
-              ),
-            ],
-          ),
-          Text(
-            "+$quantity",
-            style: TextStyle(
-              fontSize: fontMedium,
-              color: Colors.green,
               fontWeight: FontWeight.bold,
             ),
           ),

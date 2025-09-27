@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:stock_wise/screens/home_screen.dart';
+import 'package:stock_wise/screens/stocks_screen.dart';
 
 import 'scanner_screen.dart';
 
@@ -13,10 +14,10 @@ class BottomNav extends StatefulWidget {
 
 class _BottomNavState extends State<BottomNav> {
     int _selectedIndex = 0;
-    
+
     final List<Widget> _pages = [
       const HomeScreen(),
-      const Center(child: Text('Stocks')),
+      const StocksScreen(),
       const Center(child: Text('AI Assistant')),
       const Center(child: Text('Profile')),
     ];
