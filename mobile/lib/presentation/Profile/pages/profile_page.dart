@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:mobile/common/helper/navigator/app_navigator.dart';
 import 'package:mobile/domain/auth/usecases/is_logged_out.dart';
-import 'package:mobile/presentation/Profile/profile_menu_item.dart';
+import 'package:mobile/presentation/Profile/widgets/profile_menu_item.dart';
 import 'package:mobile/presentation/auth/pages/signin.dart';
 import 'package:mobile/service_locator.dart';
-
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -40,15 +38,18 @@ class ProfilePage extends StatelessWidget {
 
     result.fold(
       (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Logout failed: $error')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Logout failed: $error')));
       },
       (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Logged out successfully')),
         );
-        AppNavigator.push(context,SigninPage());
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => SigninPage()),
+          (route) => false,
+        );
       },
     );
   }
@@ -63,10 +64,7 @@ class ProfilePage extends StatelessWidget {
         centerTitle: true,
         title: const Text(
           "Profile",
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
       ),
       body: Column(
@@ -89,18 +87,31 @@ class ProfilePage extends StatelessWidget {
           //   user.username,
           //   style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           // ), uncomment when username is available
-
-       
           const SizedBox(height: 20),
 
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               children: [
-                ProfileMenuItem(icon: Icons.edit, title: "Edit Profile", onTap: () {}),
-                ProfileMenuItem(icon: Icons.history, title: "History", onTap: () {}),
-                ProfileMenuItem(icon: Icons.lock, title: "Change password", onTap: () {}),
-                ProfileMenuItem(icon: Icons.logout, title: "Log out", onTap: () => _confirmLogout(context),
+                ProfileMenuItem(
+                  icon: Icons.edit,
+                  title: "Edit Profile",
+                  onTap: () {},
+                ),
+                ProfileMenuItem(
+                  icon: Icons.history,
+                  title: "History",
+                  onTap: () {},
+                ),
+                ProfileMenuItem(
+                  icon: Icons.lock,
+                  title: "Change password",
+                  onTap: () {},
+                ),
+                ProfileMenuItem(
+                  icon: Icons.logout,
+                  title: "Log out",
+                  onTap: () => _confirmLogout(context),
                 ),
               ],
             ),

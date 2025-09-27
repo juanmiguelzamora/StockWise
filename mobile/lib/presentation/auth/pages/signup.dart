@@ -1,10 +1,12 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mobile/common/bloc/button/button_state.dart';
 import 'package:mobile/common/bloc/button/button_state_cubit.dart';
 import 'package:mobile/common/helper/navigator/app_navigator.dart';
 import 'package:mobile/common/widgets/button/basic_reactive_button.dart';
+import 'package:mobile/core/configs/assets/app_vectors.dart';
 import 'package:mobile/data/auth/models/user_creation_req.dart';
 import 'package:mobile/domain/auth/usecases/signup.dart';
 import 'package:mobile/presentation/auth/pages/signin.dart';
@@ -49,23 +51,27 @@ class SignupPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // --- Logo and Illustration ---
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Image.asset("assets/logo.png", height: 30), // replace with your logo
-                    ],
-                  ),
                   const SizedBox(height: 20),
-                  Image.asset("assets/signup_illustration.png", height: 120), // replace with your illustration
 
+                  /// --- SVG Illustration ---
+                  SvgPicture.asset(
+                    AppVectors.signup,
+                    height: 150,
+                    fit: BoxFit.contain,
+                    placeholderBuilder: (context) => const CircularProgressIndicator(),
+                  ),
                   const SizedBox(height: 24),
-                  // --- Title ---
+
+                  /// --- Title ---
                   const Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
                       "Welcome!",
-                      style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
                     ),
                   ),
                   const Align(
@@ -77,92 +83,39 @@ class SignupPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
 
-                  // --- First Name ---
-                  TextField(
+                  _buildTextField(
                     controller: _firstNameController,
-                    decoration: InputDecoration(
-                      hintText: "First Name",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    ),
+                    hint: "First Name",
                   ),
                   const SizedBox(height: 16),
 
-                  // --- Last Name ---
-                  TextField(
+                  _buildTextField(
                     controller: _lastNameController,
-                    decoration: InputDecoration(
-                      hintText: "Last Name",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    ),
+                    hint: "Last Name",
                   ),
                   const SizedBox(height: 16),
 
-                  // --- Email ---
-                  TextField(
+                  _buildTextField(
                     controller: _emailController,
-                    decoration: InputDecoration(
-                      hintText: "johndoe@gmail.com",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    ),
+                    hint: "johndoe@gmail.com",
                   ),
                   const SizedBox(height: 16),
 
-                  // --- Password ---
-                  ValueListenableBuilder(
-                    valueListenable: _obscurePassword,
-                    builder: (_, obscure, __) {
-                      return TextField(
-                        controller: _passwordController,
-                        obscureText: obscure,
-                        decoration: InputDecoration(
-                          hintText: "Password",
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                          suffixIcon: IconButton(
-                            icon: Icon(obscure ? Icons.visibility_off : Icons.visibility),
-                            onPressed: () => _obscurePassword.value = !obscure,
-                          ),
-                        ),
-                      );
-                    },
+                  _buildPasswordField(
+                    controller: _passwordController,
+                    hint: "Password",
+                    obscure: _obscurePassword,
                   ),
                   const SizedBox(height: 16),
 
-                  // --- Confirm Password ---
-                  ValueListenableBuilder(
-                    valueListenable: _obscureConfirm,
-                    builder: (_, obscure, __) {
-                      return TextField(
-                        controller: _confirmPasswordController,
-                        obscureText: obscure,
-                        decoration: InputDecoration(
-                          hintText: "Confirm Password",
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                          suffixIcon: IconButton(
-                            icon: Icon(obscure ? Icons.visibility_off : Icons.visibility),
-                            onPressed: () => _obscureConfirm.value = !obscure,
-                          ),
-                        ),
-                      );
-                    },
+                  _buildPasswordField(
+                    controller: _confirmPasswordController,
+                    hint: "Confirm Password",
+                    obscure: _obscureConfirm,
                   ),
                   const SizedBox(height: 24),
 
-                  // --- Signup Button ---
+                  /// --- Signup Button ---
                   Builder(
                     builder: (buttonContext) {
                       return SizedBox(
@@ -170,49 +123,7 @@ class SignupPage extends StatelessWidget {
                         height: 55,
                         child: BasicReactiveButton(
                           onPressed: () {
-                            // Validate inputs
-                            if (_firstNameController.text.trim().isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("First name is required")),
-                              );
-                              return;
-                            }
-                            if (_lastNameController.text.trim().isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("Last name is required")),
-                              );
-                              return;
-                            }
-                            if (_emailController.text.trim().isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("Email is required")),
-                              );
-                              return;
-                            }
-                            if (_passwordController.text.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("Password is required")),
-                              );
-                              return;
-                            }
-                            if (_passwordController.text != _confirmPasswordController.text) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("Passwords do not match")),
-                              );
-                              return;
-                            }
-
-                            final userReq = UserCreationReq(
-                              firstName: _firstNameController.text.trim(),
-                              lastName: _lastNameController.text.trim(),
-                              email: _emailController.text.trim(),
-                              password: _passwordController.text,
-                            );
-
-                            buttonContext.read<ButtonStateCubit>().execute(
-                                  usecase: sl<SignupUseCase>(),
-                                  params: userReq,
-                                );
+                            _onSignupPressed(buttonContext, context);
                           },
                           title: "Sign up",
                         ),
@@ -221,7 +132,7 @@ class SignupPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
 
-                  // --- Login Redirect ---
+                  /// --- Login Redirect ---
                   RichText(
                     text: TextSpan(
                       style: const TextStyle(color: Colors.black54),
@@ -234,7 +145,10 @@ class SignupPage extends StatelessWidget {
                             fontWeight: FontWeight.bold,
                           ),
                           recognizer: TapGestureRecognizer()
-                            ..onTap = () => AppNavigator.pushReplacement(context, SigninPage()),
+                            ..onTap = () => AppNavigator.pushReplacement(
+                                  context,
+                                  SigninPage(),
+                                ),
                         ),
                       ],
                     ),
@@ -245,6 +159,111 @@ class SignupPage extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String hint,
+  }) {
+    return TextField(
+      controller: controller,
+      style: const TextStyle(color: Colors.black),
+      decoration: InputDecoration(
+        hintText: hint,
+        filled: true,
+        fillColor: Colors.transparent,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Colors.grey),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Colors.blue),
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      ),
+    );
+  }
+
+  Widget _buildPasswordField({
+    required TextEditingController controller,
+    required String hint,
+    required ValueNotifier<bool> obscure,
+  }) {
+    return ValueListenableBuilder(
+      valueListenable: obscure,
+      builder: (_, isObscure, __) {
+        return TextField(
+          controller: controller,
+          obscureText: isObscure,
+          style: const TextStyle(color: Colors.black),
+          decoration: InputDecoration(
+            hintText: hint,
+            filled: true,
+            fillColor: Colors.transparent,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Colors.grey),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Colors.blue),
+            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            suffixIcon: IconButton(
+              icon: Icon(
+                  isObscure ? Icons.visibility_off : Icons.visibility),
+              onPressed: () => obscure.value = !isObscure,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _onSignupPressed(BuildContext buttonContext, BuildContext context) {
+    if (_firstNameController.text.trim().isEmpty) {
+      _showError(context, "First name is required");
+      return;
+    }
+    if (_lastNameController.text.trim().isEmpty) {
+      _showError(context, "Last name is required");
+      return;
+    }
+    if (_emailController.text.trim().isEmpty) {
+      _showError(context, "Email is required");
+      return;
+    }
+    if (_passwordController.text.isEmpty) {
+      _showError(context, "Password is required");
+      return;
+    }
+    if (_passwordController.text != _confirmPasswordController.text) {
+      _showError(context, "Passwords do not match");
+      return;
+    }
+
+    final userReq = UserCreationReq(
+      firstName: _firstNameController.text.trim(),
+      lastName: _lastNameController.text.trim(),
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
+    );
+
+    buttonContext.read<ButtonStateCubit>().execute(
+          usecase: sl<SignupUseCase>(),
+          params: userReq,
+        );
+  }
+
+  void _showError(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
     );
   }
 }
