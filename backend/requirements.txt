@@ -4,3 +4,20 @@ djangorestframework-simplejwt==5.3.1
 psycopg2-binary==2.9.9
 python-dotenv==1.0.1
 django-rest-passwordreset==1.4.1
+
+# ML / Data Science
+scikit-learn==1.5.2
+numpy==2.1.2
+pandas==2.2.3
+scipy==1.14.1
+
+# Scraping / Google Trends
+pytrends==4.9.2
+requests==2.32.3
+
+
+# Default (2 keywords per run)
+#python manage.py scrape_trends
+
+# Run with 3 keywords instead
+#python manage.py scrape_trends --subset-size 3

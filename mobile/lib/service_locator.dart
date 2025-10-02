@@ -29,10 +29,10 @@ import 'package:mobile/presentation/product/provider/product_provider.dart';
 
 final sl = GetIt.instance;
 
-const String mediaBaseUrl = "https://d96233414a3d.ngrok-free.app/media/";
+const String mediaBaseUrl = "https://ca9b4d99fd88.ngrok-free.app/media/";
 
 Future<void> iniatializeServiceLocator() async {
-  const baseUrl = "https://d96233414a3d.ngrok-free.app/api/";  // Updated to Django backend
+  const baseUrl = "https://ca9b4d99fd88.ngrok-free.app/api/";  // Updated to Django backend
   sl.registerSingleton<String>(mediaBaseUrl, instanceName: "mediaBaseUrl");
 
 

@@ -7,7 +7,7 @@ from django.conf import settings
 def password_reset_token_created(sender, instance, reset_password_token, *args, **kwargs):
     email = reset_password_token.user.email
     token = reset_password_token.key
-    reset_url = f"https://d96233414a3d.ngrok-free.app/api/password_reset/confirm/{token}/"
+    reset_url = f"https://ca9b4d99fd88.ngrok-free.app/api/password_reset/confirm/{token}/"
 
     subject = 'Password Reset Request'
     from_email = settings.DEFAULT_FROM_EMAIL

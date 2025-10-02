@@ -30,6 +30,7 @@ urlpatterns = [
     path('api/password_reset/confirm/<str:token>/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('api/password_reset/', include('django_rest_passwordreset.urls', namespace='password_reset')),
     path('api/', include('product_app.urls')), 
+    path('api/', include('trend_app.urls')),  
 ]
 
 if settings.DEBUG:

@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django_rest_passwordreset',
     'auth_app',
     'product_app',
+    "trend_app",
 ]
 
 MIDDLEWARE = [
