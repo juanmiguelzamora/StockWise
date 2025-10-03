@@ -15,6 +15,8 @@ import jwt
 from .permissions import IsAdminUser
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import AdminOnlyTokenObtainPairSerializer
+from rest_framework import generics, permissions
+from .serializers import UserSerializer
 
 from .serializers import (
     RegisterSerializer,
@@ -218,4 +220,40 @@ class UserManagementView(APIView):
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
         
-        
+     # --- Me View ---
+class MeView(generics.RetrieveUpdateAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+
+
+# --- Change Password ---
+class ChangePasswordView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        old_password = request.data.get("old_password")
+        new_password = request.data.get("new_password")
+
+        if not user.check_password(old_password):
+            return Response({"detail": "Old password is incorrect."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Custom password rules
+        if len(new_password) < 10:
+            return Response({"detail": "New password must be at least 10 characters long."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if new_password.isdigit():
+            return Response({"detail": "Password cannot be entirely numeric."}, status=status.HTTP_400_BAD_REQUEST)
+
+        common_passwords = ["password", "123456", "qwerty", "admin", "letmein"]
+        if new_password.lower() in common_passwords:
+            return Response({"detail": "Password is too common."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Save
+        user.set_password(new_password)
+        user.save()
+
+        return Response({"detail": "Password updated successfully."}, status=status.HTTP_200_OK)

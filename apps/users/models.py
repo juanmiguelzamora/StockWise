@@ -49,3 +49,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):   # ✅ aligned with class User
         return self.email
+    
+    
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
+    profile_picture = models.ImageField(upload_to="profile_pics/", null=True, blank=True)

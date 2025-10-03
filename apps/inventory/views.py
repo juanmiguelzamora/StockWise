@@ -4,7 +4,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import InventoryProduct
 from .serializer import InventoryProductSerializer
-
+from .models import StockTransaction
+from .serializer import StockTransactionSerializer
 
 class IsStaffOrSuperuser(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -22,6 +23,10 @@ class ProductViewSet(viewsets.ModelViewSet):
             return [IsStaffOrSuperuser()]
         return [permissions.AllowAny()]
 
+class StockTransactionViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = StockTransaction.objects.all().order_by("-timestamp")
+    serializer_class = StockTransactionSerializer
+    permission_classes = [IsAuthenticated]  # 👈 Add this for safety
 
 # ✅ User info endpoint
 @api_view(["GET"])
@@ -34,3 +39,5 @@ def user_me(request):
         "is_staff": user.is_staff,
         "is_superuser": user.is_superuser,
     })
+
+

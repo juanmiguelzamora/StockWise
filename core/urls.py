@@ -2,6 +2,8 @@ from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse
 from django.middleware.csrf import get_token
+from django.conf import settings
+from django.conf.urls.static import static
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -60,5 +62,12 @@ urlpatterns = [
 
     # CSRF token helper
     path("api/v1/auth/csrf/", csrf_token_view, name="csrf-token"),
+
+    #products
+    path("api/v1/inventory/", include("apps.inventory.urls")),
     
+    
+
 ]
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

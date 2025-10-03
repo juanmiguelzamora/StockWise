@@ -3,6 +3,9 @@ from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.contrib.auth.models import User
+from .models import UserProfile
+
 
 User = get_user_model()
 
@@ -100,51 +103,65 @@ class PasswordResetSerializer(serializers.Serializer):
         return value
 
 
-# --- Password Reset Confirm Serializer ---
 class PasswordResetConfirmSerializer(serializers.Serializer):
     new_password = serializers.CharField(write_only=True)
     confirm_password = serializers.CharField(write_only=True)
 
     def validate_new_password(self, value):
-        try:
-            validate_password(value)
-            validate_password_length(value)
-        except ValidationError as e:
-            raise serializers.ValidationError(e.messages)
+        # ✅ Minimum length check
+        if len(value) < 10:
+            raise serializers.ValidationError("Password must be at least 10 characters long.")
+
+        # ✅ No entirely numeric passwords
+        if value.isdigit():
+            raise serializers.ValidationError("Password cannot be entirely numeric.")
+
+        # ✅ No common passwords
+        common_passwords = ["password", "123456", "qwerty", "admin", "letmein"]
+        if value.lower() in common_passwords:
+            raise serializers.ValidationError("Password is too common, please choose something stronger.")
+
         return value
 
     def validate(self, data):
+        # ✅ Password match check
         if data.get("new_password") != data.get("confirm_password"):
-            raise serializers.ValidationError("Passwords do not match.")
+            raise serializers.ValidationError({"confirm_password": "Passwords do not match."})
         return data
-    
+
     
 
 
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ['profile_picture']
+        
 class UserSerializer(serializers.ModelSerializer):
+    profile_picture = serializers.ImageField(write_only=True, required=False)
+
     class Meta:
         model = User
-        fields = ["id", "email", "is_staff", "is_superuser", "password"]
-        extra_kwargs = {"password": {"write_only": True}}
+        fields = ['id', 'email', 'is_staff', 'is_superuser', 'profile_picture']
 
     def update(self, instance, validated_data):
-        request_user = self.context['request'].user
-        password = validated_data.pop("password", None)
+        picture = validated_data.pop('profile_picture', None)
+        instance = super().update(instance, validated_data)
 
-        # Only superusers can edit users
-        if not request_user.is_superuser:
-            raise serializers.ValidationError("Only admin can edit users.")
+        # Create profile if missing
+        profile, _ = UserProfile.objects.get_or_create(user=instance)
+        if picture:
+            profile.profile_picture = picture
+            profile.save()
 
-        # Superuser can edit everything
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-
-        if password:
-            validate_password(password)
-            instance.set_password(password)
-
-        instance.save()
         return instance
 
-
+    def to_representation(self, instance):
+        """Return the profile picture full URL for frontend."""
+        ret = super().to_representation(instance)
+        if hasattr(instance, 'profile') and instance.profile.profile_picture:
+            ret['profile_picture'] = f"{self.context['request'].build_absolute_uri(instance.profile.profile_picture.url)}"
+        else:
+            ret['profile_picture'] = None
+        return ret
 
