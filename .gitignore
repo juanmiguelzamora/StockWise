@@ -1,4 +1,25 @@
-# Ignore environment files
+# Ignore env files
 .env
 *.env
-.api.ts
+.env.*
+
+# Python virtual environments
+.venv/
+venv/
+
+# Python cache and bytecode files
+__pycache__/
+*.pyc
+
+# Node modules and build output
+node_modules/
+dist/
+
+# VSCode settings folder
+.vscode/
+
+# OS files
+.DS_Store
+
+# Logs
+*.log
