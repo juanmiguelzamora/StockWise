@@ -1,6 +1,6 @@
 # File Tree: StockWises
 
-Generated on: 10/3/2025, 9:04:06 AM
+Generated on: 10/3/2025, 7:24:35 PM
 Root path: `c:\Users\ADMIN\Desktop\StockWises`
 
 ```
@@ -15,6 +15,7 @@ Root path: `c:\Users\ADMIN\Desktop\StockWises`
 │   │   │   ├── 🐍 0002_inventoryproduct_image.py
 │   │   │   ├── 🐍 0003_stocktransaction.py
 │   │   │   ├── 🐍 0004_stocktransaction_product_name_and_more.py
+│   │   │   ├── 🐍 0005_remove_stocktransaction_product_name_and_more.py
 │   │   │   └── 🐍 __init__.py
 │   │   ├── 📁 tests/
 │   │   │   └── 🐍 __init__.py
@@ -32,9 +33,6 @@ Root path: `c:\Users\ADMIN\Desktop\StockWises`
 │       ├── 📁 migrations/
 │       │   ├── 📁 __pycache__/ 🚫 (auto-hidden)
 │       │   ├── 🐍 0001_initial.py
-│       │   ├── 🐍 0002_group_alter_user_groups.py
-│       │   ├── 🐍 0003_alter_user_groups_delete_group.py
-│       │   ├── 🐍 0004_userprofile.py
 │       │   └── 🐍 __init__.py
 │       ├── 📁 templates/
 │       │   └── 🌐 login_page.html
@@ -127,7 +125,8 @@ Root path: `c:\Users\ADMIN\Desktop\StockWises`
 │   │   │   └── 📄 user.tsx
 │   │   ├── 📁 services/
 │   │   │   ├── 📄 api.ts
-│   │   │   └── 📄 authservice.ts
+│   │   │   ├── 📄 authservice.ts
+│   │   │   └── 📝 file_tree.md
 │   │   ├── 🎨 App.css
 │   │   ├── 📄 App.tsx
 │   │   ├── 📄 declaration.d.ts
@@ -220,7 +219,8 @@ Root path: `c:\Users\ADMIN\Desktop\StockWises`
 │       ├── 🖼️ profile_OvNwIKZ.jpg
 │       ├── 🖼️ profile_Z9O7t6n.jpg
 │       ├── 🖼️ profile_icAfNI5.jpg
-│       └── 🖼️ profile_jetz3eX.jpg
+│       ├── 🖼️ profile_jetz3eX.jpg
+│       └── 🖼️ profile_kUFJvXE.jpg
 ├── 🔒 .env 🚫 (auto-hidden)
 ├── 🚫 .gitignore
 ├── 📖 README.md

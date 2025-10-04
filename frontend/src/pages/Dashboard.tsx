@@ -73,48 +73,38 @@ export default function ProtectedDashboard() {
   };
 
   // Fetch items
-  useEffect(() => {
-    let mounted = true;
+ useEffect(() => {
+   fetchTransactions();
+   }, []);
 
-    const fetchItems = async () => {
-      setLoading(true);
-      setError("");
+   const fetchTransactions = async () => {
+     setLoading(true); 
+    try {
+        const res = await api.get("/inventory/transactions/");
+       const raw = Array.isArray(res.data) ? res.data : res.data.results || []; 
+       const mapped: Product[] = raw.map((t: any) => ({
 
-      try {
-        const res = await api.get("inventory/");
-        const rawItems: any[] = Array.isArray(res.data)
-          ? res.data
-          : res.data.results || [];
+          id: t.product,
+         name: t.product_name,
+          description: t.description || "",
+           price: t.price || 0,
+            image: t.image, 
+            sku: t.sku, 
+            stock: 0,
+             change: t.change,
+              date: t.timestamp,
+             }));
+             setItems(mapped); 
+             setFiltered(mapped);
 
-        const mapped: Product[] = rawItems.map((p) => ({
-          id: p.product_id,
-          name: p.product_name,
-          description: p.description,
-          stock: p.quantity,
-          price: p.price,
-          date: p.updated_at,
-          change: p.quantity,
-          image: p.image,
-          sku: p.sku,
-        }));
-
-        if (mounted) {
-          setItems(mapped);
-          setFiltered(mapped);
-        }
       } catch (err: any) {
-        console.error("Fetch items failed:", err.response?.status, err.response?.data);
-        setError("Failed to load items: " + (err.response?.status || err.message));
-      } finally {
-        if (mounted) setLoading(false);
+         console.error("Fetch transactions failed:", err.response?.data || err); 
+         setError("Failed to load stock history");
+     } finally {
+       setLoading(false);
       }
     };
 
-    fetchItems();
-    return () => {
-      mounted = false;
-    };
-  }, []);
 
   // Search filter
   useEffect(() => {

@@ -19,6 +19,7 @@ interface InventoryItem {
 interface HistoryItem {
   id: number;
   name: string;
+  image: string;  
   change: number;
   stock: number;
   date: string;
@@ -86,6 +87,7 @@ export default function Inventory() {
         addToHistory({
           id: changedItem.id,
           name: changedItem.name,
+           image: changedItem.image,
           change,
           stock: newQty,
           date: new Date().toISOString(),
@@ -97,34 +99,33 @@ export default function Inventory() {
   };
 
   // Increase quantity
-  const handleIncrease = async (id: number) => {
-    const item = items.find((i) => i.id === id);
-    if (!item) return;
+const handleIncrease = async (id: number) => {
+  try {
+    const res = await api.post(`/inventory/${id}/adjust_stock/`, {
+      change: 1,
+      note: "Manual increase",
+    });
+    updateItem(id, res.data.new_quantity, +1);
+  } catch (err: any) {
+    console.error("Increase failed:", err);
+  }
+};
 
-    const newQty = item.qty + 1;
+const handleDecrease = async (id: number) => {
+  const item = items.find((i) => i.id === id);
+  if (!item || item.qty === 0) return;
 
-    try {
-      await api.patch(`/inventory/${id}/`, { quantity: newQty });
-      updateItem(id, newQty, +1);
-    } catch (err: any) {
-      console.error("Failed to increase quantity:", err.response?.data || err.message);
-    }
-  };
+  try {
+    const res = await api.post(`/inventory/${id}/adjust_stock/`, {
+      change: -1,
+      note: "Manual decrease",
+    });
+    updateItem(id, res.data.new_quantity, -1);
+  } catch (err: any) {
+    console.error("Decrease failed:", err);
+  }
+};
 
-  // Decrease quantity
-  const handleDecrease = async (id: number) => {
-    const item = items.find((i) => i.id === id);
-    if (!item || item.qty === 0) return;
-
-    const newQty = item.qty - 1;
-
-    try {
-      await api.patch(`/inventory/${id}/`, { quantity: newQty });
-      updateItem(id, newQty, -1);
-    } catch (err: any) {
-      console.error("Failed to decrease quantity:", err.response?.data || err.message);
-    }
-  };
 
   // Add record to history
   const addToHistory = (item: HistoryItem) => {
