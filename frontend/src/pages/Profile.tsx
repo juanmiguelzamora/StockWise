@@ -27,6 +27,7 @@ interface CroppedArea {
 }
 
 export default function Profile() {
+  const [saving, setSaving] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -54,6 +55,12 @@ export default function Profile() {
     fetchUser();
   }, []);
 
+  useEffect(() => {
+  return () => {
+    if (preview) URL.revokeObjectURL(preview);
+  };
+}, [preview]);
+
   const fetchUser = async (): Promise<void> => {
     try {
       const res = await api.get<User>("users/me/");
@@ -61,7 +68,7 @@ export default function Profile() {
       setFormData({ email: res.data.email });
       setPreview(res.data.profile_picture || null);
     } catch (err: any) {
-      console.error(err.response?.data || err.message);
+      alert(err.response?.data?.detail || "Failed to load profile");
     } finally {
       setLoading(false);
     }
@@ -75,47 +82,52 @@ export default function Profile() {
     }
   };
 
-  const updateProfile = async (): Promise<void> => {
-    try {
-      const form = new FormData();
-      form.append("email", formData.email);
-
-      if (profilePicture) {
-        form.append("profile_picture", profilePicture, "profile.jpg");
-      }
-
-      await api.patch("users/me/", form, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      fetchUser();
-      setShowEdit(false);
-
-      if (profilePicture) setProfilePicture(null);
-    } catch (err: any) {
-      console.log(err.response?.data);
-      alert(err.response?.data?.detail || "Failed to update profile");
+ const updateProfile = async (): Promise<void> => {
+  try {
+    setSaving(true); // start loading
+    const form = new FormData();
+    form.append("email", formData.email);
+    if (profilePicture) {
+      form.append("profile_picture", profilePicture, "profile.jpg");
     }
-  };
+    await api.patch("users/me/", form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    fetchUser();
+    setShowEdit(false);
+    if (profilePicture) setProfilePicture(null);
+  } catch (err: any) {
+    alert(err.response?.data?.detail || "❌ Failed to update profile");
+  } finally {
+    setSaving(false); // stop loading
+  }
+};
 
   const changePassword = async (): Promise<void> => {
-    if (passwordData.new_password !== passwordData.confirm_password) {
-      alert("New password and confirmation do not match");
-      return;
-    }
-    try {
-      await api.post("users/change-password/", passwordData);
-      alert("✅ Password updated successfully");
-      setShowPassword(false);
-      setPasswordData({
-        old_password: "",
-        new_password: "",
-        confirm_password: "",
-      });
-    } catch (err: any) {
-      alert(err.response?.data?.detail || "Failed to change password");
-    }
-  };
+  if (passwordData.new_password !== passwordData.confirm_password) {
+    alert("New password and confirmation do not match");
+    return;
+  }
+
+  // ✅ Password strength check
+  if (passwordData.new_password.length < 8) {
+    alert("Password must be at least 8 characters");
+    return;
+  }
+
+  try {
+    await api.post("users/change-password/", passwordData);
+    alert("✅ Password updated successfully");
+    setShowPassword(false);
+    setPasswordData({
+      old_password: "",
+      new_password: "",
+      confirm_password: "",
+    });
+  } catch (err: any) {
+    alert(err.response?.data?.detail || "Failed to change password");
+  }
+};
 
   if (loading) return <p className="p-6">Loading profile...</p>;
 
@@ -124,19 +136,23 @@ export default function Profile() {
       <Navbar />
       <section className="mt-32 px-6 md:px-16 lg:px-24">
         {/* Profile Header */}
-        <div className="bg-gray-100 rounded-2xl shadow p-6 flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full border border-gray-300 flex items-center justify-center overflow-hidden">
-            {user?.profile_picture ? (
-              <img
-                src={user.profile_picture}
-                alt="Profile"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <i className="fa-regular fa-user text-gray-500 text-3xl" />
-            )}
-          </div>
-          <div>
+<div className="bg-gray-100 rounded-2xl shadow p-6 flex items-center gap-4">
+  <div className="w-20 aspect-square rounded-full border border-gray-300 flex items-center justify-center overflow-hidden">
+    {user?.profile_picture ? (
+      <img
+        src={
+          user.profile_picture?.startsWith("http")
+            ? user.profile_picture
+            : `${import.meta.env.VITE_API_URL}${user.profile_picture}`
+        }
+        alt="Profile"
+        className="w-full h-full object-cover"
+      />
+    ) : (
+      <i className="fa-regular fa-user text-gray-500 text-3xl" />
+    )}
+  </div>
+      <div>
             <h2 className="text-xl font-semibold text-gray-800">
               {user?.email}
             </h2>
@@ -279,12 +295,13 @@ export default function Profile() {
               >
                 Cancel
               </button>
-              <button
-                onClick={updateProfile}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg"
-              >
-                Save
-              </button>
+             <button
+  onClick={updateProfile}
+  disabled={saving}
+  className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50"
+>
+  {saving ? "Saving..." : "Save"}
+</button>
             </div>
           </div>
         </div>

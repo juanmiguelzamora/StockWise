@@ -194,7 +194,7 @@ const UsersPage: React.FC = () => {
 
               {/* Dropdown */}
               {open && (
-                <div className="absolute right-0 mt-2 bg-white border rounded-md shadow-md w-32 z-50">
+                <div className="absolute right-6 mt-2 bg-white border rounded-md shadow-md w-32 z-50">
                   {["All User", "All Admin", "All Staff"].map((option) => (
                     <div
                       key={option}
@@ -202,7 +202,7 @@ const UsersPage: React.FC = () => {
                         setSelected(option as typeof selected);
                         setOpen(false);
                       }}
-                      className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                      className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer text-center"
                     >
                       {option}
                     </div>
@@ -248,7 +248,7 @@ const UsersPage: React.FC = () => {
                         title="Edit Role"
                       >
                         <img
-                          src="/src/assets/iconedit.png"
+                          src="/iconedit.png"
                           alt="Edit"
                           className="w-full h-full object-contain"
                           draggable={false}
@@ -263,7 +263,7 @@ const UsersPage: React.FC = () => {
                         title="Delete User"
                       >
                         <img
-                          src="/src/assets/icondelete.png"
+                          src="/icondelete.png"
                           alt="Delete"
                           className="w-full h-full object-contain"
                           draggable={false}

@@ -7,7 +7,9 @@ from apps.inventory.views import ProductViewSet, StockTransactionViewSet, user_m
 
 # Router for ProductViewSet
 router = DefaultRouter()
-router.register("transactions", StockTransactionViewSet, basename="transactions")
+#router.register("transactions", StockTransactionViewSet, basename="transactions")
+router.register("history", StockTransactionViewSet, basename="history")
+
 router.register(r'', ProductViewSet, basename='inventory')  # ✅ just empty string
 
 

@@ -9,8 +9,18 @@ class InventoryProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = InventoryProduct
-        fields = "__all__"
-        extra_fields = ["image_url", "last_change"]
+        fields = [
+            "product_id",
+            "product_name",
+            "sku",
+            "category",
+            "quantity",
+            "image",
+            "created_at",
+            "updated_at",
+            "image_url",
+            "last_change",
+        ]
 
     def get_image_url(self, obj):
         request = self.context.get("request")
@@ -25,7 +35,32 @@ class InventoryProductSerializer(serializers.ModelSerializer):
 
 class StockTransactionSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source="product.product_name", read_only=True)
+    description = serializers.CharField(source="product.description", read_only=True)
+    price = serializers.DecimalField(source="product.price", max_digits=10, decimal_places=2, read_only=True)
+    sku = serializers.CharField(source="product.sku", read_only=True)
+    category = serializers.CharField(source="product.category", read_only=True)
+    new_quantity = serializers.IntegerField(source="product.quantity", read_only=True)
+    image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = StockTransaction
-        fields = ["id", "product", "product_name", "change", "timestamp", "note"]
+        fields = [
+            "id",
+            "product",
+            "product_name",
+            "description",
+            "price",
+            "sku",
+            "category",
+            "new_quantity",
+            "image_url",
+            "change",
+            "timestamp",
+            "note",
+        ]
+
+    def get_image_url(self, obj):
+        request = self.context.get("request")
+        if obj.product.image and request:
+            return request.build_absolute_uri(obj.product.image.url)
+        return None

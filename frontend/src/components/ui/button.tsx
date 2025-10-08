@@ -1,7 +1,6 @@
 import React from "react";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
-
 type ButtonVariant = "primary" | "secondary" | "success" | "danger" | "outline" | "ghost";
 type ButtonSize = "sm" | "md" | "lg" | "xl";
 
@@ -23,7 +22,6 @@ const Button: React.FC<ButtonProps> = ({
   loading = false,
   fullWidth = false,
   className = "",
-  onClick,
   type = "button",
   ...props
 }) => {
@@ -50,16 +48,25 @@ const Button: React.FC<ButtonProps> = ({
 
   const classes = `${baseClasses} ${variants[variant]} ${sizes[size]} ${widthClass} ${className}`;
 
+  const spinnerSize = size === "sm" ? "h-3 w-3" : size === "md" ? "h-4 w-4" : size === "lg" ? "h-5 w-5" : "h-6 w-6";
+
   return (
     <button
       type={type}
       className={classes}
       disabled={disabled || loading}
-      onClick={onClick}
+      aria-busy={loading}
+      aria-disabled={disabled || loading}
       {...props}
     >
       {loading && (
-        <svg className="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+        <svg
+          className={`animate-spin -ml-1 mr-2 ${spinnerSize}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          role="status"
+          aria-hidden="true"
+        >
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
           <path
             className="opacity-75"

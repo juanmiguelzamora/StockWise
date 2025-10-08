@@ -44,7 +44,7 @@ export default function ResetRequest() {
       {/* Top logo */}
       <div className="pt-4 px-4 sm:px-6 lg:px-10">
         <img
-          src="/src/assets/toplogo.png"
+          src="/toplogo.png"
           alt="Top Logo"
           className="h-8 sm:h-10 md:h-12 lg:h-14 object-contain"
         />
@@ -55,7 +55,7 @@ export default function ResetRequest() {
         <div className="w-full max-w-md text-center -translate-y-6 sm:-translate-y-10">
           {/* Illustration */}
           <img
-            src="/src/assets/resetlogo.png"
+            src="/resetlogo.png"
             alt="Reset Illustration"
             className="mx-auto mb-4 h-24 sm:h-28 object-contain -mt-4 sm:-mt-16"
           />
@@ -120,7 +120,7 @@ export default function ResetRequest() {
             {/* Clickable arrow */}
             <Link to="/login">
               <img
-                src="/src/assets/arrow.png"
+                src="/arrow.png"
                 alt="Back"
                 className="h-5 w-5 cursor-pointer hover:opacity-80"
               />

@@ -12,6 +12,7 @@ import Inventory from "./pages/Inventory";
 import Users from "./pages/user";      
 import AiAssistant from "./pages/AiAssistant";
 
+
 const App: React.FC = () => {
   return (
     <Routes>

@@ -87,7 +87,7 @@ const Login: React.FC = () => {
       {/* Top logo */}
       <div className="pt-4 px-4 sm:px-6 lg:px-10">
         <img
-          src="/src/assets/toplogo.png"
+          src="/toplogo.png"
           alt="Top Logo"
           className="h-8 sm:h-10 md:h-12 lg:h-14 xl:h-16 object-contain"
         />
@@ -98,7 +98,7 @@ const Login: React.FC = () => {
         <div className="w-full max-w-md text-center -translate-y-6 sm:-translate-y-10">
           {/* Illustration */}
           <img
-            src="/src/assets/loginlogo.png"
+            src="/loginlogo.png"
             alt="Login Illustration"
             className="mx-auto mb-4 h-20 sm:h-24 md:h-28 lg:h-32 object-contain"
           />

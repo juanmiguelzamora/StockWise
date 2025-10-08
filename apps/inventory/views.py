@@ -1,13 +1,11 @@
-from rest_framework import permissions, viewsets
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework import permissions, status, viewsets
+from rest_framework.decorators import api_view, action, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from .models import InventoryProduct
-from .serializer import InventoryProductSerializer
-from .models import StockTransaction
-from .serializer import StockTransactionSerializer
-from rest_framework.decorators import action
-from rest_framework import status
+
+from .models import InventoryProduct, StockTransaction
+from .serializer import InventoryProductSerializer, StockTransactionSerializer
+
 
 class IsStaffOrSuperuser(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -28,39 +26,46 @@ class ProductViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
     def adjust_stock(self, request, pk=None):
         """
-        Custom action to adjust stock and log a StockTransaction.
+        Adjust stock safely and log a transaction.
         Example body: { "change": -1, "note": "Manual deduction" }
         """
+        product = self.get_object()
         try:
-            product = self.get_object()
             change = int(request.data.get("change", 0))
-            note = request.data.get("note", "")
+        except (TypeError, ValueError):
+            return Response({"error": "Invalid change value"}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Update quantity
-            product.quantity += change
-            product.save()
+        note = request.data.get("note", "")
 
-            # Create stock transaction
-            StockTransaction.objects.create(
-                product=product,
-                change=change,
-                note=note
-            )
+        # 🚫 Prevent negative stock
+        if change < 0 and product.quantity + change < 0:
+            return Response({"error": "Stock cannot go below 0"}, status=status.HTTP_400_BAD_REQUEST)
 
-            return Response({
-                "product_id": product.product_id,
-                "new_quantity": product.quantity,
-                "change": change,
-                "note": note,
-            }, status=status.HTTP_200_OK)
+        # ✅ Update quantity
+        product.quantity += change
+        product.save()
 
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        # ✅ Log transaction
+        StockTransaction.objects.create(
+            product=product,
+            change=change,
+            note=note
+        )
+
+        return Response({
+            "product_id": product.product_id,
+            "new_quantity": product.quantity,
+            "change": change,
+            "note": note,
+        }, status=status.HTTP_200_OK)
+
 
 class StockTransactionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = StockTransaction.objects.all().order_by("-timestamp")
     serializer_class = StockTransactionSerializer
-    permission_classes = [IsAuthenticated]  # 👈 Add this for safety
+    permission_classes = [IsAuthenticated]
+    pagination_class = None  # 👈 disables pagination for this viewset
+
 
 # ✅ User info endpoint
 @api_view(["GET"])

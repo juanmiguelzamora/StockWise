@@ -75,7 +75,7 @@ const Signup: React.FC = () => {
       {/* Top bar with logo */}
       <div className="pt-4 px-4 sm:px-6 lg:px-10">
         <img
-          src="/src/assets/toplogo.png"
+          src="/toplogo.png"
           alt="Logo"
           className="h-8 sm:h-10 md:h-12 lg:h-14 xl:h-16 object-contain"
         />
@@ -86,7 +86,7 @@ const Signup: React.FC = () => {
         <div className="w-full max-w-md text-center -translate-y-6 sm:-translate-y-10">
           {/* Illustration */}
           <img
-            src="/src/assets/signuplogo.png"
+            src="/signuplogo.png"
             alt="Signup Illustration"
             className="mx-auto mb-3 h-16 sm:h-20 md:h-24"
           />
