@@ -35,6 +35,9 @@ export default function Inventory({ onStockChange }: InventoryProps) {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [inputQuantities, setInputQuantities] = useState<Record<number, number | "">>({});
+
+   
   
 
   // Fetch inventory
@@ -99,24 +102,80 @@ export default function Inventory({ onStockChange }: InventoryProps) {
 };
 
 
-  const handleIncrease = async (product_id: number) => {
-    const res = await api.post(`/inventory/${product_id}/adjust_stock/`, { change: 1 });
-    updateItem(product_id, res.data.new_quantity);
-  };
+const handleIncrease = async (product_id: number) => {
+  const item = items.find((i) => i.product_id === product_id);
+  if (!item) return;
 
-  const handleDecrease = async (product_id: number) => {
-    const item = items.find((i) => i.product_id === product_id);
-    if (!item || item.quantity === 0) return;
+  const newQuantity = item.quantity + 1;
+  const change = 1;
 
-    const res = await api.post(`/inventory/${product_id}/adjust_stock/`, { change: -1 });
-    updateItem(product_id, res.data.new_quantity);
-  };
+  try {
+    await api.post(`/inventory/${product_id}/adjust_stock/`, { change });
+    updateItem(product_id, newQuantity);
+    setInputQuantities((prev) => ({ ...prev, [product_id]: newQuantity }));
+    
+  } catch (err) {
+    console.error("Failed to update stock:", err);
+    alert("❌ Failed to update stock");
+  }
+};
 
- const filteredItems = items
+const handleDecrease = async (product_id: number) => {
+  const item = items.find((i) => i.product_id === product_id);
+  if (!item) return;
+
+  const newQuantity = Math.max(item.quantity - 1, 0);
+  const change = -1;
+
+  try {
+    await api.post(`/inventory/${product_id}/adjust_stock/`, { change });
+    updateItem(product_id, newQuantity);
+    setInputQuantities((prev) => ({ ...prev, [product_id]: newQuantity }));
+    
+  } catch (err) {
+    console.error("Failed to update stock:", err);
+    alert("❌ Failed to update stock");
+  }
+};
+
+
+
+ const handleInputChange = (product_id: number, value: string) => {
+  if (value === "") {
+    // Allow empty input
+    setInputQuantities((prev) => ({ ...prev, [product_id]: "" as any }));
+    return;
+  }
+
+  const num = parseInt(value, 10);
+  if (!isNaN(num) && num >= 0) {
+    setInputQuantities((prev) => ({ ...prev, [product_id]: num }));
+  }
+};
+const handleSave = async (product_id: number) => {
+  const value = inputQuantities[product_id];
+  const newQuantity = value === "" || value === undefined ? 0 : Number(value);
+
+  const item = items.find((i) => i.product_id === product_id);
+  if (!item) return;
+
+  try {
+    const change = newQuantity - item.quantity;
+    await api.post(`/inventory/${product_id}/adjust_stock/`, { change });
+    updateItem(product_id, newQuantity);
+    alert(`✅ Quantity for ${item.product_name} updated successfully!`);
+  } catch (err) {
+    console.error("Failed to update stock:", err);
+    alert("❌ Failed to update stock");
+  }
+};
+
+
+const filteredItems = items
   .filter((item) =>
     item.product_name.toLowerCase().includes(searchTerm.toLowerCase())
   )
-  .sort((a, b) => b.quantity - a.quantity);
+  .sort((a, b) => a.product_name.localeCompare(b.product_name));
 return (
   <section className="bg-[#F2F7FA] min-h-screen p-8 pt-24">
     <Navbar />
@@ -186,23 +245,49 @@ return (
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2 ml-4">
-          <button
-            onClick={() => handleDecrease(item.product_id)}
-            className="flex items-center justify-center w-8 h-8 rounded-full bg-red-100"
-          >
-            <img src="/icon_minusbtn.png" alt="Decrease" className="w-4 h-4" />
-          </button>
-          <span className="text-sm font-semibold text-gray-800">
-            {item.quantity}
-          </span>
-          <button
-            onClick={() => handleIncrease(item.product_id)}
-            className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100"
-          >
-            <img src="/icon_plusbtn.png" alt="Increase" className="w-4 h-4" />
-          </button>
-        </div>
+       <div className="flex items-center gap-2 ml-0 sm:ml-4">
+        
+
+  <button
+    onClick={() => handleDecrease(item.product_id)}
+    className="flex items-center justify-center w-8 h-8 rounded-full bg-red-100"
+  >
+    <img src="/icon_minusbtn.png" alt="Decrease" className="w-4 h-4" />
+  </button>
+<input
+  type="number"
+  min={0}
+  value={
+    inputQuantities[item.product_id] === ""
+      ? "" // Show empty while editing
+      : inputQuantities[item.product_id] ?? item.quantity
+  }
+  onChange={(e) => handleInputChange(item.product_id, e.target.value)}
+  onBlur={() => {
+    if (inputQuantities[item.product_id] === "") {
+      setInputQuantities((prev) => ({
+        ...prev,
+        [item.product_id]: 0,
+      }));
+    }
+  }}
+  onKeyDown={(e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSave(item.product_id);
+    }
+  }}
+   className="w-14 min-w-[56px] flex-shrink-0 text-center border border-gray-300 rounded-md px-2 py-1 text-sm"
+/>
+
+
+  <button
+    onClick={() => handleIncrease(item.product_id)}
+    className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100"
+  >
+    <img src="/icon_plusbtn.png" alt="Increase" className="w-4 h-4" />
+  </button>
+</div>
       </div>
 
       {/* Desktop/Grid Layout */}
@@ -240,25 +325,46 @@ return (
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-end items-center gap-2 mt-4">
-          <button
-            onClick={() => handleDecrease(item.product_id)}
-            className="flex items-center justify-center w-8 h-8 rounded-full"
-          >
-            <img src="/icon_minusbtn.png" alt="Decrease" className="w-4 h-4" />
-          </button>
+       <div className="flex justify-end items-center gap-2 mt-4">
+  <button
+    onClick={() => handleDecrease(item.product_id)}
+    className="flex items-center justify-center w-8 h-8 rounded-full"
+  >
+    <img src="/icon_minusbtn.png" alt="Decrease" className="w-4 h-4" />
+  </button>
 
-          <span className="text-sm font-semibold text-gray-800">
-            {item.quantity}
-          </span>
-
-          <button
-            onClick={() => handleIncrease(item.product_id)}
-            className="flex items-center justify-center w-8 h-8 rounded-full"
-          >
-            <img src="/icon_plusbtn.png" alt="Increase" className="w-4 h-4" />
-          </button>
-          </div>
+<input
+  type="number"
+  min={0}
+  value={
+    inputQuantities[item.product_id] === ""
+      ? "" // Show empty while editing
+      : inputQuantities[item.product_id] ?? item.quantity
+  }
+  onChange={(e) => handleInputChange(item.product_id, e.target.value)}
+  onBlur={() => {
+    if (inputQuantities[item.product_id] === "") {
+      setInputQuantities((prev) => ({
+        ...prev,
+        [item.product_id]: 0,
+      }));
+    }
+  }}
+  onKeyDown={(e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSave(item.product_id);
+    }
+  }}
+  className="w-14 text-center border border-gray-300 rounded-md px-2 py-1 text-sm"
+/>
+  <button
+    onClick={() => handleIncrease(item.product_id)}
+    className="flex items-center justify-center w-8 h-8 rounded-full"
+  >
+    <img src="/icon_plusbtn.png" alt="Increase" className="w-4 h-4" />
+  </button>
+</div>
 </div>
 
 {/* ✅ Hide Chrome/Edge scrollbar */}
