@@ -1,11 +1,11 @@
 # Ignore env files
-.env
-*.env
-.env.*
+#.env
+#*.env
+#.env.*
 
 # Python virtual environments
-.venv/
-venv/
+#.venv/
+#venv/
 
 # Python cache and bytecode files
 __pycache__/
