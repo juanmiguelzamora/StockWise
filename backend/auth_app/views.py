@@ -16,6 +16,8 @@ from django.conf import settings
 
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
+    authentication_classes = []  # Disable auth for public registration
+    permission_classes = [AllowAny]  # Explicitly allow unauthenticated
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

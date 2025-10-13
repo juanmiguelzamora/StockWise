@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'auth_app',
     'product_app',
     "trend_app",
+    "ai_assistant",
 ]
 
 MIDDLEWARE = [
@@ -157,9 +158,16 @@ SIMPLE_JWT = {
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake',
+        'LOCATION': 'unique-snowflake',    
     }
 }
+
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Manila'
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 #EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -175,5 +183,25 @@ DJANGO_REST_PASSWORDRESET = {
     'RESET_PASSWORD_TOKEN_GENERATOR': 'django_rest_passwordreset.tokens.get_token_generator'
 }
 
+OLLAMA_API_TIMEOUT = 60
+FUZZY_MATCH_CUTOFF = 0.3
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'product_app': {  # Your app name
+            'handlers': ['console'],
+            'level': 'DEBUG',  # NEW: Shows debug snippets
+            'propagate': True,
+        },
+    },
+}

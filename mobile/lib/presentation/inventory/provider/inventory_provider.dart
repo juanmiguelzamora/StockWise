@@ -16,8 +16,14 @@ class InventoryProvider extends ChangeNotifier {
   List<Inventory> _items = [];
   List<Inventory> get items => _items;
 
-  bool _loading = false;
-  bool get loading => _loading;
+  InventorySummary? _summary;
+  InventorySummary? get summary => _summary;
+
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
+
+  bool _hasError = false;
+  bool get hasError => _hasError;
 
   // Stock status filters using backend-provided stock_status field
   List<Inventory> get outOfStock =>
@@ -34,22 +40,45 @@ class InventoryProvider extends ChangeNotifier {
   int get lowStockCount => lowStock.length;
   int get inStockCount => inStock.length;
 
-  // Summary
-  InventorySummary? get summary =>
-      _items.isEmpty ? null : getInventorySummaryUseCase(_items);
-
+  /// Fetches inventory data and computes summary.
+  /// Keeps showing last known data if the backend fails.
   Future<void> fetchInventory() async {
-    _loading = true;
+    _isLoading = true;
+    _hasError = false;
     notifyListeners();
 
     try {
       final result = await getInventoryUseCase();
       _items = result;
+      _summary = getInventorySummaryUseCase(_items);
     } catch (e) {
-      debugPrint("Error fetching inventory: $e");
-    }
+      debugPrint("⚠️ Error fetching inventory: $e");
+      _hasError = true;
 
-    _loading = false;
+      // Keep showing last known data if available
+      if (_items.isNotEmpty && _summary == null) {
+        _summary = getInventorySummaryUseCase(_items);
+      }
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Allows manual refresh of summary from existing items (no API call)
+  void refreshSummary() {
+    if (_items.isNotEmpty) {
+      _summary = getInventorySummaryUseCase(_items);
+      notifyListeners();
+    }
+  }
+
+  /// Clears all inventory data (for logout or cache reset)
+  void clearData() {
+    _items = [];
+    _summary = null;
+    _hasError = false;
+    _isLoading = false;
     notifyListeners();
   }
 }

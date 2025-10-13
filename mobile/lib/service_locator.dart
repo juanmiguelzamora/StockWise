@@ -2,11 +2,13 @@ import 'package:get_it/get_it.dart';
 import 'package:mobile/data/ai_assistant/repository/ai_repository_impl.dart';
 import 'package:mobile/data/ai_assistant/source/ai_remote_datasource.dart';
 import 'package:mobile/data/auth/repository/auth_repository_impl.dart';
-import 'package:mobile/data/auth/source/auth_api_service.dart';  // Updated to API service
+import 'package:mobile/data/auth/source/auth_api_service.dart';  
 import 'package:mobile/data/inventory/datasources/inventory_remote_datasource.dart';
 import 'package:mobile/data/inventory/repositories/inventory_repository_impl.dart';
 import 'package:mobile/data/product/repository/product_repository_impl.dart';
 import 'package:mobile/data/product/source/product_remote_datasource.dart';
+import 'package:mobile/data/trends/datasource/trends_remote_datasource.dart';
+import 'package:mobile/data/trends/repositories/trends_repository_impl.dart';
 import 'package:mobile/domain/ai_assistant/repository/ai_repository.dart';
 import 'package:mobile/domain/auth/repository/auth.dart';
 import 'package:mobile/domain/auth/usecases/get_user.dart';
@@ -23,16 +25,20 @@ import 'package:mobile/domain/product/repository/product_repository.dart';
 import 'package:mobile/domain/product/usecases/get_product_by_sku.dart';
 import 'package:mobile/domain/product/usecases/get_product_usecase.dart';
 import 'package:mobile/domain/product/usecases/update_product_quantity_usecase.dart';
-import 'package:mobile/presentation/ai_assistant/ai_provider.dart';
+import 'package:mobile/domain/trends/repositories/trends_repositories.dart';
+import 'package:mobile/domain/trends/usecases/get_predictions.dart';
+import 'package:mobile/domain/trends/usecases/get_trends.dart';
+import 'package:mobile/domain/trends/usecases/run_scraper.dart';
 import 'package:mobile/presentation/inventory/provider/inventory_provider.dart';
 import 'package:mobile/presentation/product/provider/product_provider.dart';
+import 'package:mobile/presentation/trends/provider/trends_provider.dart';
 
 final sl = GetIt.instance;
 
-const String mediaBaseUrl = "https://ca9b4d99fd88.ngrok-free.app/media/";
+const String mediaBaseUrl = "https://7a4d5ca30b1d.ngrok-free.app/media/";
 
 Future<void> iniatializeServiceLocator() async {
-  const baseUrl = "https://ca9b4d99fd88.ngrok-free.app/api/";  // Updated to Django backend
+  const baseUrl = "https://7a4d5ca30b1d.ngrok-free.app/api/";  // Updated to Django backend
   sl.registerSingleton<String>(mediaBaseUrl, instanceName: "mediaBaseUrl");
 
 
@@ -75,12 +81,10 @@ Future<void> iniatializeServiceLocator() async {
     LogoutUseCase(),
   );
 
-  // ========================
-  //  INVENTORY
-  // ========================
-  //const baseUrl = "http://192.168.100.16:8000"; // <- change this later
-  //const baseUrl = "http://10.35.183.201:8000"; // <- change this later
 
+  // ========================
+  //  INVENTORY FEATURE
+  // ========================
 
   // data sources
   sl.registerLazySingleton<InventoryRemoteDataSource>(
@@ -122,8 +126,6 @@ Future<void> iniatializeServiceLocator() async {
   // repository
   sl.registerLazySingleton<AiRepository>(() => AiRepositoryImpl(sl<AiRemoteDataSource>()));
 
-  // provider
-  sl.registerFactory<AiProvider>(() => AiProvider(sl<AiRepository>()));
 
   // ========================
   //  PRODUCT FEATURE 
@@ -160,4 +162,40 @@ Future<void> iniatializeServiceLocator() async {
       updateQuantityUseCase: sl<UpdateProductQuantityUseCase>(),
     ),
   );
+
+
+ // ========================
+ // TRENDS FEATURE 
+ // ========================
+
+  // Data Source
+  sl.registerLazySingleton<TrendsRemoteDataSource>(
+    () => TrendsRemoteDataSourceImpl(baseUrl: baseUrl),
+  );
+
+  // Repository
+  sl.registerLazySingleton<TrendsRepository>(
+    () => TrendsRepositoryImpl(sl<TrendsRemoteDataSource>()),
+  );
+
+  // Usecases
+  sl.registerLazySingleton<GetTrends>(
+    () => GetTrends(sl<TrendsRepository>()),
+  );
+  sl.registerLazySingleton<GetPredictions>(
+    () => GetPredictions(sl<TrendsRepository>()),
+  );
+  sl.registerLazySingleton<RunScraper>(
+    () => RunScraper(sl<TrendsRepository>()),
+  );
+
+  // Provider
+  sl.registerFactory<TrendsProvider>(
+    () => TrendsProvider(
+      getTrends: sl<GetTrends>(),
+      getPredictions: sl<GetPredictions>(),
+      runScraper: sl<RunScraper>(),
+    ),
+  );
 }
+

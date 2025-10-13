@@ -5,8 +5,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:mobile/data/auth/models/user_creation_req.dart';
 import 'package:mobile/data/auth/models/user_signin_req.dart';
 
-//const String baseUrl = 'http://192.168.100.16:8000/api/';
-//const String baseUrl = 'https://faeec36a062d.ngrok-free.app/api/';
 const storage = FlutterSecureStorage();
 
 abstract class AuthApiService {

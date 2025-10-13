@@ -1,10 +1,13 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:mobile/common/bloc/button/button_state.dart';
 import 'package:mobile/common/bloc/button/button_state_cubit.dart';
 import 'package:mobile/common/helper/navigator/app_navigator.dart';
 import 'package:mobile/common/widgets/button/basic_reactive_button.dart';
+import 'package:mobile/core/configs/assets/app_vectors.dart';
+import 'package:mobile/core/configs/theme/app_colors.dart';
 import 'package:mobile/data/auth/models/user_creation_req.dart';
 import 'package:mobile/domain/auth/usecases/signup.dart';
 import 'package:mobile/presentation/auth/pages/signin.dart';
@@ -50,15 +53,11 @@ class SignupPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   // --- Logo and Illustration ---
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Image.asset("assets/logo.png", height: 30), // replace with your logo
-                    ],
+                  Center(
+                    child: SvgPicture.asset(
+                      AppVectors.signup
+                    ),
                   ),
-                  const SizedBox(height: 20),
-                  Image.asset("assets/signup_illustration.png", height: 120), // replace with your illustration
-
                   const SizedBox(height: 24),
                   // --- Title ---
                   const Align(

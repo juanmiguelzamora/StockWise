@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/common/helper/navigator/app_navigator.dart';
 import 'package:mobile/domain/auth/usecases/is_logged_out.dart';
-import 'package:mobile/presentation/Profile/profile_menu_item.dart';
+import 'package:mobile/presentation/Profile/pages/change_pass.dart';
+import 'package:mobile/presentation/Profile/pages/edit_profile_page.dart';
+import 'package:mobile/presentation/Profile/pages/history_page.dart';
+import 'package:mobile/presentation/Profile/widgets/profile_menu_item.dart';
 import 'package:mobile/presentation/auth/pages/signin.dart';
+import 'package:mobile/presentation/trends/pages/trends_page.dart';
 import 'package:mobile/service_locator.dart';
 
 
@@ -97,9 +101,9 @@ class ProfilePage extends StatelessWidget {
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               children: [
-                ProfileMenuItem(icon: Icons.edit, title: "Edit Profile", onTap: () {}),
-                ProfileMenuItem(icon: Icons.history, title: "History", onTap: () {}),
-                ProfileMenuItem(icon: Icons.lock, title: "Change password", onTap: () {}),
+                ProfileMenuItem(icon: Icons.edit, title: "Edit Profile", onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TrendsPage()))),
+                ProfileMenuItem(icon: Icons.history, title: "History", onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HistoryPage()))),
+                ProfileMenuItem(icon: Icons.lock, title: "Change password", onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChangePasswordPage()))),
                 ProfileMenuItem(icon: Icons.logout, title: "Log out", onTap: () => _confirmLogout(context),
                 ),
               ],

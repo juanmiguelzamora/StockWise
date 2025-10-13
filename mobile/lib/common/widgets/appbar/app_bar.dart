@@ -37,7 +37,7 @@ class BasicAppbar extends StatelessWidget implements PreferredSizeWidget {
           height: 50,
           width: 50,
           decoration: const BoxDecoration(
-            color: AppColors.secondBackground,
+            color: AppColors.background,
             shape: BoxShape.circle
           ),
           child: const Icon(

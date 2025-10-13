@@ -30,10 +30,10 @@ class SplashPage extends StatelessWidget {
         }
       },
       child: Scaffold(
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors.background,
         body: Center(
           child: SvgPicture.asset(
-            AppVectors.appLogo
+            AppVectors.stockcube
           ),
         ),
       ),

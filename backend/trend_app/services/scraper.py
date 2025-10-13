@@ -6,12 +6,43 @@ import logging, time, random
 logger = logging.getLogger(__name__)
 
 def get_current_season():
-    """Return season based on PH climate (2 seasons: Dry and Wet)."""
-    month = datetime.now().month
-    if 12 <= month or month <= 5:  # December–May
-        return "dry"
-    else:  # June–November
-        return "wet"
+    """
+    Return season/event label based on PH events + climate patterns.
+    Uses month + day ranges for better accuracy.
+    """
+    today = datetime.now()
+    month, day = today.month, today.day
+
+    # Christmas season (Sept–Dec, extended in PH culture)
+    if month in [9, 10, 11, 12]:
+        return "christmas"
+
+    # Valentines (Feb 7–21)
+    if month == 2 and 7 <= day <= 21:
+        return "valentines"
+
+    # Halloween (Oct 15 – Nov 2)
+    if (month == 10 and day >= 15) or (month == 11 and day <= 2):
+        return "halloween"
+
+    # Back to school (June)
+    if month == 6:
+        return "back_to_school"
+
+    # Summer (Mar–May)
+    if 3 <= month <= 5:
+        return "summer"
+
+    # Rainy season (Jun–Aug)
+    if 6 <= month <= 8:
+        return "rainy"
+
+    # Fall-like fashion (Sept–Nov, but not Halloween/Christmas tagged already)
+    if 9 <= month <= 11:
+        return "fall"
+
+    return "general"
+
 
 
 def scrape_trending_clothes(max_retries=3, subset_size=2):
@@ -23,7 +54,13 @@ def scrape_trending_clothes(max_retries=3, subset_size=2):
     pytrends = TrendReq(hl="en-US", tz=360)
     season = get_current_season()
 
-    seed_keywords = ["fashion", "clothes", "outfit", "dress", "jacket"]
+    seed_keywords = [
+        "fashion", "clothes", "outfit", "dress", "jacket",
+        "tshirt", "pants", "shorts", "hoodie", "shoes",
+        "streetwear", "formal wear", "swimwear", "summer fashion",
+        "winter outfit", "bag", "hat"
+    ]
+
 
     # 👉 Randomly sample a subset to run this time
     keywords_to_run = random.sample(seed_keywords, subset_size)
@@ -38,11 +75,11 @@ def scrape_trending_clothes(max_retries=3, subset_size=2):
         while retries < max_retries and not success:
             try:
                 # Build payload
-                pytrends.build_payload([kw], timeframe="now 7-d", geo="PH")
+                pytrends.build_payload([kw], timeframe="today 12-m", geo="PH")
                 related = pytrends.related_queries().get(kw)
 
                 if related and "rising" in related:
-                    rising = related["rising"].head(3)  # top 3 rising queries
+                    rising = related["rising"].head(10)  # top 10 rising queries
                     for _, row in rising.iterrows():
                         keyword = row["query"].strip()
                         score = float(row["value"]) / 100.0  # normalize 0–1

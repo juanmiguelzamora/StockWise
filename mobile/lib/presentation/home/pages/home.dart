@@ -1,3 +1,4 @@
+// presentation/home/pages/home.dart
 import 'package:flutter/material.dart';
 import 'package:mobile/presentation/home/widgets/header.dart';
 import 'package:mobile/presentation/inventory/widgets/inventory_list.dart';
@@ -15,49 +16,68 @@ class HomePage extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => sl<InventoryProvider>()..fetchInventory(),
       child: Scaffold(
-        backgroundColor: Colors.grey.shade100,
+        backgroundColor: Colors.white,
         body: SafeArea(
-          child: RefreshIndicator(
-            onRefresh: () async {
-              await context.read<InventoryProvider>().fetchInventory();
-            },
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Header(),
-                  const SizedBox(height: 8),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    child: StockOverview(),
+          child: Consumer<InventoryProvider>(
+            builder: (context, provider, _) {
+              return RefreshIndicator(
+                onRefresh: () async => await provider.fetchInventory(),
+                color: Colors.blue,
+                child: CustomScrollView(
+                  physics: const BouncingScrollPhysics(
+                    parent: AlwaysScrollableScrollPhysics(),
                   ),
-                  const SizedBox(height: 8),
-                  // Stock Summary Section
-                  _buildSectionTitle(context, "Stocks"),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    child: StockSummary(),
-                  ),
-                  const SizedBox(height: 24),
+                  slivers: [
+                    // 🔹 App Header
+                    const SliverToBoxAdapter(child: Header()),
 
-                  // History Section
-                  _buildSectionTitle(context, "History"),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    child: InventoryList(),
-                  ),
-                  const SizedBox(height: 24),
-                ],
-              ),
-            ),
+                    const SliverToBoxAdapter(child: SizedBox(height: 8)),
+
+                    // 🔹 Stock Overview
+                    const SliverPadding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.0),
+                      sliver: SliverToBoxAdapter(child: StockOverview()),
+                    ),
+
+                    const SliverToBoxAdapter(child: SizedBox(height: 8)),
+
+                    // 🔹 Stock Section
+                    SliverToBoxAdapter(
+                      child: _SectionTitle(title: "Stocks"),
+                    ),
+                    const SliverPadding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.0),
+                      sliver: SliverToBoxAdapter(child: StockSummary()),
+                    ),
+                    const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
+                    // 🔹 History Section
+                    SliverToBoxAdapter(
+                      child: _HistorySectionTitle(),
+                    ),
+                    const SliverPadding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.0),
+                      sliver: SliverToBoxAdapter(child: InventoryList()),
+                    ),
+                    const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                  ],
+                ),
+              );
+            },
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
+/// 🔹 Reusable Section Title Widget
+class _SectionTitle extends StatelessWidget {
+  final String title;
+  const _SectionTitle({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
       child: Text(
@@ -67,6 +87,46 @@ class HomePage extends StatelessWidget {
           fontWeight: FontWeight.bold,
           color: Colors.black87,
         ),
+      ),
+    );
+  }
+}
+
+/// 🔹 Reusable History Header with Button
+class _HistorySectionTitle extends StatelessWidget {
+  const _HistorySectionTitle();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text(
+            "History",
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              // TODO: Navigate to history page
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.blue,
+            ),
+            child: const Text(
+              "See all",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

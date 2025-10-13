@@ -14,57 +14,109 @@ class Header extends StatelessWidget {
     return BlocProvider(
       create: (context) => UserInfoDisplayCubit()..displayUserInfo(),
       child: Padding(
-        padding: const EdgeInsets.only(
-            top: 40,
-            right: 16,
-            left: 16
-          ),
-          child: BlocBuilder < UserInfoDisplayCubit, UserInfoDisplayState > (
-            builder: (context, state) {
-              if (state is UserInfoLoading) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (state is UserInfoLoaded) {
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    //_profileImage(state.user,context),
-                    _name(state.user),
-                    //_card(context)
-                  ],
-                );
-              }
-              return Container();
-            },
-          ),
+        padding: const EdgeInsets.only(top: 40, right: 16, left: 16),
+        child: BlocBuilder<UserInfoDisplayCubit, UserInfoDisplayState>(
+          builder: (context, state) {
+            if (state is UserInfoLoading) {
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: const [
+                  CircleAvatar(
+                    radius: 24,
+                    backgroundColor: Colors.grey,
+                    child: Icon(Icons.person, color: Colors.white70),
+                  ),
+                  Text(
+                    "Loading...",
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ],
+              );
+            }
+
+            if (state is UserInfoLoaded) {
+              return _buildHeader(context, state.user);
+            }
+
+            // Fallback (e.g., offline or no data)
+            return _buildHeader(
+              context,
+              UserEntity(
+                userId: "0",
+                firstName: "Guest",
+                lastName: "",
+                email: "guest@stockwise.app",
+              ),
+            );
+          },
+        ),
       ),
     );
   }
 
-  Widget _name(UserEntity user) {
-  return Container(
-    height: 40,
-    padding: const EdgeInsets.symmetric(
-      horizontal: 16
-    ),
-    decoration: BoxDecoration(
-      color: AppColors.secondBackground,
-      //borderRadius: BorderRadius.circular(100)
-    ),
-    child: Center(
-      child: Text(
-        // Display the first and last name
-        user.greeting,
-        //user.email,
-        style: const TextStyle(
-          fontWeight: FontWeight.w500,
-          fontSize: 32,
-          color: Colors.amber
+  Widget _buildHeader(BuildContext context, UserEntity user) {
+    final greeting = user.greeting.isNotEmpty
+        ? user.greeting
+        : "Welcome, ${user.firstName}";
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        // Profile avatar with shimmer animation
+        CircleAvatar(
+          radius: 24,
+          backgroundColor: AppColors.primary.withOpacity(0.2),
+          child: Icon(
+            Icons.person,
+            size: 28,
+            color: AppColors.primary,
+          ),
         ),
-      ),
-    ),
-  );
+
+        const SizedBox(width: 12),
+
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                greeting,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 22,
+                  color: AppColors.textPrimary,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+              Text(
+                user.email,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textPrimary.withOpacity(0.8),
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+
+        IconButton(
+          icon: const Icon(Icons.notifications_none, color: AppColors.textPrimary),
+          onPressed: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Notifications coming soon!")),
+            );
+          },
+        ),
+      ],
+    );
+  }
 }
+
 
 // Widget _profileImage(UserEntity user,BuildContext context) {
   //   return GestureDetector(
@@ -109,4 +161,3 @@ class Header extends StatelessWidget {
   //     ),
   //   );
   // }
-}

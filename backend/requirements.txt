@@ -13,6 +13,7 @@ scipy==1.14.1
 
 # Scraping / Google Trends
 pytrends==4.9.2
+urllib3<2.0.0
 requests==2.32.3
 
 

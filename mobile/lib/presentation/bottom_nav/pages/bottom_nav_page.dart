@@ -36,6 +36,7 @@ class BottomNavPage extends StatelessWidget {
           }
 
           return Scaffold(
+            resizeToAvoidBottomInset: false,
             body: pages[selectedItem] ?? const Center(child: Text("Page not found")),
             floatingActionButton: FloatingActionButton(
               onPressed: onFabPressed,
