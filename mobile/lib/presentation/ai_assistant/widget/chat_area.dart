@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:mobile/core/configs/theme/app_colors.dart';
 import 'package:mobile/domain/ai_assistant/bloc/ai_cubit.dart';
 import 'package:mobile/domain/ai_assistant/bloc/ai_state.dart';
-import 'package:mobile/domain/ai_assistant/entity/ai_response.dart';
 import 'package:mobile/domain/ai_assistant/entity/chat_message.dart';
 import 'package:mobile/presentation/ai_assistant/widget/ai_response.dart';
 import 'package:mobile/presentation/ai_assistant/widget/message_bubble.dart';

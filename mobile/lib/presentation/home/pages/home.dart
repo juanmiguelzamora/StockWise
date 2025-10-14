@@ -1,5 +1,6 @@
 // presentation/home/pages/home.dart
 import 'package:flutter/material.dart';
+import 'package:mobile/presentation/Profile/pages/history_page.dart';
 import 'package:mobile/presentation/home/widgets/header.dart';
 import 'package:mobile/presentation/inventory/widgets/inventory_list.dart';
 import 'package:mobile/presentation/inventory/widgets/stock_overview.dart';
@@ -113,7 +114,15 @@ class _HistorySectionTitle extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              // TODO: Navigate to history page
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ChangeNotifierProvider(
+                    create: (_) => sl<InventoryProvider>(),
+                    child: const InventoryHistoryPage(),
+                  ),
+                ),
+              );
             },
             style: TextButton.styleFrom(
               foregroundColor: Colors.blue,

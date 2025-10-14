@@ -25,7 +25,7 @@ class UserModel {
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
     return UserModel(
-      userId: map['id'].toString() ?? '',  // Django uses 'id'
+      userId: map['id']?.toString() ?? '',  // Django uses 'id'
       email: map['email'] ?? '',
       firstName: map['first_name'] ?? '',  // Django uses underscore
       lastName: map['last_name'] ?? '',

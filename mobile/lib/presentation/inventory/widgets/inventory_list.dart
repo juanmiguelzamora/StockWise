@@ -148,12 +148,13 @@ class _InventoryListState extends State<InventoryList> {
 
   /// Builds the inventory list
   Widget _buildInventoryList(List items) {
+    final limitedItems = items.take(3).toList();
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: items.length,
+      itemCount: limitedItems.length,
       itemBuilder: (context, index) {
-        final item = items[index];
+        final item = limitedItems[index];
         return _buildInventoryCard(item);
       },
     );

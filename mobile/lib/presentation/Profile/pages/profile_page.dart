@@ -6,8 +6,10 @@ import 'package:mobile/presentation/Profile/pages/edit_profile_page.dart';
 import 'package:mobile/presentation/Profile/pages/history_page.dart';
 import 'package:mobile/presentation/Profile/widgets/profile_menu_item.dart';
 import 'package:mobile/presentation/auth/pages/signin.dart';
+import 'package:mobile/presentation/inventory/provider/inventory_provider.dart';
 import 'package:mobile/presentation/trends/pages/trends_page.dart';
 import 'package:mobile/service_locator.dart';
+import 'package:provider/provider.dart';
 
 
 class ProfilePage extends StatelessWidget {
@@ -102,7 +104,19 @@ class ProfilePage extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               children: [
                 ProfileMenuItem(icon: Icons.edit, title: "Edit Profile", onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TrendsPage()))),
-                ProfileMenuItem(icon: Icons.history, title: "History", onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HistoryPage()))),
+                ProfileMenuItem(
+                  icon: Icons.history,
+                  title: "History",
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ChangeNotifierProvider(
+                        create: (_) => sl<InventoryProvider>(),
+                        child: const InventoryHistoryPage(),
+                      ),
+                    ),
+                  ),
+                ),
                 ProfileMenuItem(icon: Icons.lock, title: "Change password", onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChangePasswordPage()))),
                 ProfileMenuItem(icon: Icons.logout, title: "Log out", onTap: () => _confirmLogout(context),
                 ),

@@ -1,6 +1,5 @@
 import 'package:mobile/data/ai_assistant/source/ai_remote_datasource.dart';
 import 'package:mobile/domain/ai_assistant/entity/ai_response.dart';
-import 'package:mobile/data/ai_assistant/models/ai_response_model.dart';
 import 'package:mobile/domain/ai_assistant/repository/ai_repository.dart';
 
 class AiRepositoryImpl implements AiRepository {
