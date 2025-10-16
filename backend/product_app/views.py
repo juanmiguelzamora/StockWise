@@ -3,20 +3,21 @@ from rest_framework.response import Response
 from django.db.models import Sum, Avg, Value, DecimalField, IntegerField
 from django.db.models.functions import Coalesce
 
-from .models import Product, Inventory
+from .models import Product, Inventory, SalesHistory
 from .serializers import (
     ProductSerializer,
     ProductQuantityUpdateSerializer,
     InventorySerializer,
     InventorySummarySerializer,
+    SalesHistorySerializer,
 )
 
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all().order_by("-id")
     serializer_class = ProductSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    #permission_classes = [permissions.AllowAny]
+    #permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
     lookup_field = "sku"
 
@@ -65,8 +66,8 @@ class ProductViewSet(viewsets.ModelViewSet):
 class InventoryViewSet(viewsets.ModelViewSet):
     queryset = Inventory.objects.select_related("product").all()
     serializer_class = InventorySerializer
-    permission_classes = [permissions.IsAuthenticated]
-    #permission_classes = [permissions.AllowAny]
+    #permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
     def summary(self, request):
         data = Inventory.objects.aggregate(
@@ -80,3 +81,12 @@ class InventoryViewSet(viewsets.ModelViewSet):
         )
         serializer = InventorySummarySerializer(data)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class StockHistoryViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [permissions.AllowAny]
+    """
+    Provides read-only access to stock/sales history.
+    GET /api/stock/history/
+    """
+    queryset = SalesHistory.objects.select_related("product").order_by("-date")[:50]
+    serializer_class = SalesHistorySerializer

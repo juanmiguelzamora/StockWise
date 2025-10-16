@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product, Inventory
+from .models import Product, Inventory, SalesHistory
 
 
 class InventoryMiniSerializer(serializers.ModelSerializer):
@@ -86,3 +86,13 @@ class InventorySummarySerializer(serializers.Serializer):
     stock_out = serializers.IntegerField()
     total_stock = serializers.IntegerField()
     average_daily_sales = serializers.DecimalField(max_digits=10, decimal_places=2)
+
+
+class SalesHistorySerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source="product.name", read_only=True)
+    sku = serializers.CharField(source="product.sku", read_only=True)
+    image = serializers.CharField(source="product.image_url", read_only=True)
+
+    class Meta:
+        model = SalesHistory
+        fields = ["id", "product_name", "sku", "image", "units_sold", "date"]

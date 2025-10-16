@@ -33,8 +33,8 @@ class RegisterView(generics.CreateAPIView):
 
 
 class UserView(generics.RetrieveAPIView):
-    permission_classes = [IsAuthenticated]
-    #permission_classes = [AllowAny]
+    #permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     serializer_class = UserSerializer
 
     def get_object(self):
