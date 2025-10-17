@@ -1,6 +1,6 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import ExitIcon from "../assets/Exit.png";
 import TopLogo from "../assets/toplogo.png";
 import api from "../services/api";
@@ -11,7 +11,7 @@ interface NavItem {
   path: string;
 }
 
-interface NavbarProps {
+interface NavbarProps { 
   onLogout?: () => void | Promise<void>;
   className?: string;
 }
@@ -75,7 +75,7 @@ export default function Navbar({ onLogout, className }: NavbarProps) {
   };
 
   return (
-    <header className={`fixed top-0 left-0 w-full z-50 ${className ?? ""}`}>
+    <header className={` top-0 left-0 w-full z-50 ${className ?? ""}`}>
       <div className="max-w-7xl mx-auto flex items-center justify-between h-16 px-4">
         {/* Logo */}
         <Link to="/dashboard" className="flex items-center">

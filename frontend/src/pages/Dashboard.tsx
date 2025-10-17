@@ -1,9 +1,9 @@
-import { useEffect, useState, useMemo, useId } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../services/api"; // ✅ axios instance
 import iconOverstock from "../assets/icon1.png";
 import iconOutOfStock from "../assets/icon2.png";
 import iconLowStock from "../assets/icon3.png";
+import api from "../services/api"; // ✅ axios instance
 
 
 import {
@@ -16,7 +16,6 @@ import {
   YAxis,
 } from "recharts";
 
-import LoadingSpinner from "../components/ui/loadingspinner";
 import Navbar from "../layout/navbar";
 
 // ================== TYPES ==================
