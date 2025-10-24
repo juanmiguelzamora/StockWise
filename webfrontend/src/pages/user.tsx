@@ -5,12 +5,15 @@ import RolePopup from "../components/ui/rolepopup";
 import DeleteUserPopup from "../components/ui/deletepopup";
 import SearchBar from "../components/ui/searchbar";
 
-// 🔹 Define User type
+// 🔹 Define User type (updated to match backend model: added first_name, last_name; assuming backend serializer includes is_superuser/is_staff for role checks)
 interface User {
   id: number;
   email: string;
+  first_name: string;
+  last_name: string;
   is_superuser: boolean;
   is_staff: boolean;
+  is_active: boolean;
 }
 
 // 🔹 API response for paginated users
@@ -54,10 +57,14 @@ const UsersPage: React.FC = () => {
   useEffect(() => {
     let data = users;
 
-    // Search filter
+    // Search filter (now searches across name and email for better UX)
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      data = data.filter((user) => user.email.toLowerCase().includes(term));
+      data = data.filter(
+        (user) =>
+          user.email.toLowerCase().includes(term) ||
+          `${user.first_name} ${user.last_name}`.toLowerCase().includes(term)
+      );
     }
 
     // Dropdown filter
@@ -71,36 +78,36 @@ const UsersPage: React.FC = () => {
   }, [searchTerm, users, selected]);
 
   const fetchUsers = async () => {
-  setLoading(true);
-  setError("");
-  try {
-    const res = await api.get("user/"); // keep generic off here to avoid union confusion
-    const payload: unknown = res.data;
+    setLoading(true);
+    setError("");
+    try {
+      // Assuming backend has a list endpoint at "users/" (e.g., a ListAPIView); adjust if different
+      const res = await api.get("users/");
+      const payload: unknown = res.data;
 
-    const isPaginated = (v: any): v is PaginatedResponse<User> =>
-      v && typeof v === "object" && "results" in v;
+      const isPaginated = (v: any): v is PaginatedResponse<User> =>
+        v && typeof v === "object" && "results" in v;
 
-    let data: User[] = [];
+      let data: User[] = [];
 
-    if (Array.isArray(payload)) {
-      data = payload as User[];
-    } else if (isPaginated(payload)) {
-      data = payload.results ?? [];
-    } else {
-      data = [payload as User];
+      if (Array.isArray(payload)) {
+        data = payload as User[];
+      } else if (isPaginated(payload)) {
+        data = payload.results ?? [];
+      } else {
+        data = [payload as User];
+      }
+
+      setUsers(data);
+    } catch (err: any) {
+      console.error("Fetch error:", err.response?.status, err.response?.data);
+      if (err.response?.status === 401) setError("Unauthorized: Please log in again.");
+      else if (err.response?.status === 403) setError("Forbidden: Only admin can view users.");
+      else setError("Failed to fetch users");
+    } finally {
+      setLoading(false);
     }
-
-    setUsers(data);
-  } catch (err: any) {
-    console.error("Fetch error:", err.response?.status, err.response?.data);
-    if (err.response?.status === 401) setError("Unauthorized: Please log in again.");
-    else if (err.response?.status === 403) setError("Forbidden: Only admin can view users.");
-    else setError("Failed to fetch users");
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   const fetchCurrentUser = async () => {
     try {
@@ -125,11 +132,17 @@ const UsersPage: React.FC = () => {
     }
 
     try {
-      await api.delete(`user/${id}/`);
-      fetchUsers();
+      await api.delete(`users/${id}/`);  // Consistent with detail endpoint
+      fetchUsers();  // Refresh list
     } catch (err: any) {
-      console.error("Delete user error:", err.response?.data || err.message);
-      alert(err.response?.data?.detail || "Failed to delete user");
+      console.error("Delete user error:", err.response?.status, err.response?.data || err.message);
+      if (err.response?.status === 403) {
+        alert("Forbidden: Only admin can delete users.");
+      } else if (err.response?.status === 404) {
+        alert("User not found.");
+      } else {
+        alert(err.response?.data?.detail || "Failed to delete user");
+      }
     }
   };
 
@@ -144,13 +157,21 @@ const UsersPage: React.FC = () => {
   };
 
   const editUser = async (id: number, updatedUser: Partial<User>) => {
+    if (!editingUser) return;
+
     try {
-      await api.patch(`user/${id}/`, updatedUser);
-      fetchUsers();
+      await api.patch(`users/${editingUser.id}/`, updatedUser);  // Use editingUser.id for consistency; endpoint matches detail
+      fetchUsers();  // Refresh list
       setEditingUser(null);
     } catch (err: any) {
-      console.error("Edit user error:", err.response?.data || err.message);
-      alert(err.response?.data?.detail || "Failed to edit user");
+      console.error("Edit user error:", err.response?.status, err.response?.data || err.message);
+      if (err.response?.status === 403) {
+        alert("Forbidden: Only admin can edit users.");
+      } else if (err.response?.status === 404) {
+        alert("User not found.");
+      } else {
+        alert(err.response?.data?.detail || "Failed to edit user");
+      }
     }
   };
 
@@ -194,7 +215,7 @@ const UsersPage: React.FC = () => {
               <SearchBar
                 value={searchTerm}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-                placeholder="Search Here..."
+                placeholder="Search by name or email..."
               />
             </div>
             <div className=" relative flex-shrink-0 min-w-[110px] text-right">
@@ -227,14 +248,15 @@ const UsersPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Table */}
+          {/* Table (updated: added Name column; adjusted widths for table-fixed) */}
           <div className="bg-white rounded-xl shadow-md overflow-hidden">
             <table className="w-full text-left table-fixed">
               <thead>
                 <tr className="bg-[#5283FF] text-white">
-                  <th className="px-6 py-3 ">Email</th>
-                  <th className="px-6 py-3 text-center ">User Role</th>
-                  <th className="px-6 py-3 text-center">Action</th>
+                  <th className="w-1/3 px-6 py-3">Name</th>
+                  <th className="w-1/3 px-6 py-3">Email</th>
+                  <th className="w-1/6 px-6 py-3 text-center">User Role</th>
+                  <th className="w-1/6 px-6 py-3 text-center">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -243,6 +265,9 @@ const UsersPage: React.FC = () => {
                     key={u.id}
                     className={`${idx % 2 === 0 ? "bg-white" : "bg-[#F9FBFF]"} hover:bg-gray-100 transition`}
                   >
+                    <td className="px-6 py-3 text-gray-800">
+                      {u.first_name} {u.last_name}
+                    </td>
                     <td className="px-6 py-3 text-gray-800 truncate">{u.email}</td>
                     <td className="px-6 py-3 text-center">
                       {u.is_superuser ? (

@@ -10,13 +10,13 @@ class StockOverview extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<InventoryProvider>();
     final summary = provider.summary;
-    final hasError = provider.hasError; // Add this field in provider if not yet
-    final isLoading = provider.isLoading; // Add this flag if not present
+    final hasError = provider.hasError;
+    final isLoading = provider.isLoading;
 
     final dateFormat = DateFormat('MMM dd, yyyy');
     final today = dateFormat.format(DateTime.now());
 
-    // 🔹 Fallback values if backend is offline or summary is null
+    // Safe fallback values
     final totalStock = summary?.totalStock ?? 0;
     final stockIn = summary?.stockIn ?? 0;
     final stockOut = summary?.stockOut ?? 0;
@@ -35,12 +35,15 @@ class StockOverview extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                "Today $today",
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
+              Flexible(
+                child: Text(
+                  "Today $today",
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
                 ),
               ),
               if (isLoading)
@@ -67,9 +70,9 @@ class StockOverview extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildStockItem(totalStock.toString(), "Total"),
-              _buildStockItem(stockIn.toString(), "Stock In"),
-              _buildStockItem(stockOut.toString(), "Stock Out"),
+              _buildStockItem(totalStock, "Total"),
+              _buildStockItem(stockIn, "Stock In"),
+              _buildStockItem(stockOut, "Stock Out"),
             ],
           ),
 
@@ -93,30 +96,49 @@ class StockOverview extends StatelessWidget {
   }
 
   /// Small reusable UI builder for a stock metric
-  Widget _buildStockItem(String value, String label) {
+  Widget _buildStockItem(num value, String label) {
+    final formattedValue = _formatLargeNumber(value);
+
     return Expanded(
       child: Column(
         children: [
-          Text(
-            value,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              formattedValue,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Colors.white,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 12,
+                color: Colors.white,
+              ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  /// Helper to shorten large numbers (e.g. 12500 -> 12.5K)
+  String _formatLargeNumber(num value) {
+    if (value >= 1000000) {
+      return "${(value / 1000000).toStringAsFixed(1)}M";
+    } else if (value >= 1000) {
+      return "${(value / 1000).toStringAsFixed(1)}K";
+    } else {
+      return value.toString();
+    }
   }
 }

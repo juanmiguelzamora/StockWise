@@ -1,5 +1,5 @@
-// presentation/home/pages/home.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:mobile/presentation/Profile/pages/history_page.dart';
 import 'package:mobile/presentation/home/widgets/header.dart';
 import 'package:mobile/presentation/inventory/widgets/inventory_list.dart';
@@ -14,24 +14,33 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ✅ Set system overlay style to ensure visible status bar
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent, // no background behind status bar
+      statusBarIconBrightness: Brightness.dark, // dark icons for light background
+      statusBarBrightness: Brightness.light, // iOS
+    ));
+
     return ChangeNotifierProvider(
       create: (_) => sl<InventoryProvider>()..fetchInventory(),
       child: Scaffold(
         backgroundColor: Colors.white,
         body: SafeArea(
+          bottom: false,
           child: Consumer<InventoryProvider>(
             builder: (context, provider, _) {
               return RefreshIndicator(
                 onRefresh: () async => await provider.fetchInventory(),
-                color: Colors.blue,
+                color: Colors.blueAccent,
+                backgroundColor: Colors.white,
+                displacement: 40,
                 child: CustomScrollView(
                   physics: const BouncingScrollPhysics(
                     parent: AlwaysScrollableScrollPhysics(),
                   ),
                   slivers: [
-                    // 🔹 App Header
+                    // 🔹 Header
                     const SliverToBoxAdapter(child: Header()),
-
                     const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
                     // 🔹 Stock Overview
@@ -39,11 +48,10 @@ class HomePage extends StatelessWidget {
                       padding: EdgeInsets.symmetric(horizontal: 16.0),
                       sliver: SliverToBoxAdapter(child: StockOverview()),
                     ),
-
-                    const SliverToBoxAdapter(child: SizedBox(height: 8)),
+                    const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
                     // 🔹 Stock Section
-                    SliverToBoxAdapter(
+                    const SliverToBoxAdapter(
                       child: _SectionTitle(title: "Stocks"),
                     ),
                     const SliverPadding(
@@ -53,9 +61,7 @@ class HomePage extends StatelessWidget {
                     const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
                     // 🔹 History Section
-                    SliverToBoxAdapter(
-                      child: _HistorySectionTitle(),
-                    ),
+                    const SliverToBoxAdapter(child: _HistorySectionTitle()),
                     const SliverPadding(
                       padding: EdgeInsets.symmetric(horizontal: 16.0),
                       sliver: SliverToBoxAdapter(child: InventoryList()),
@@ -72,7 +78,7 @@ class HomePage extends StatelessWidget {
   }
 }
 
-/// 🔹 Reusable Section Title Widget
+/// 🔹 Reusable Section Title
 class _SectionTitle extends StatelessWidget {
   final String title;
   const _SectionTitle({required this.title});
@@ -93,7 +99,7 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
-/// 🔹 Reusable History Header with Button
+/// 🔹 Reusable History Section Title + Button
 class _HistorySectionTitle extends StatelessWidget {
   const _HistorySectionTitle();
 
@@ -125,15 +131,10 @@ class _HistorySectionTitle extends StatelessWidget {
               );
             },
             style: TextButton.styleFrom(
-              foregroundColor: Colors.blue,
+              foregroundColor: Colors.blueAccent,
+              textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
-            child: const Text(
-              "See all",
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+            child: const Text("See all"),
           ),
         ],
       ),

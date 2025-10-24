@@ -104,14 +104,14 @@ class Header extends StatelessWidget {
           ),
         ),
 
-        IconButton(
+       /*  IconButton(
           icon: const Icon(Icons.notifications_none, color: AppColors.textPrimary),
           onPressed: () {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text("Notifications coming soon!")),
             );
           },
-        ),
+        ), */
       ],
     );
   }

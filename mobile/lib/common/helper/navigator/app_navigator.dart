@@ -16,4 +16,14 @@ class AppNavigator {
     );
   }
 
+  /// Push [widget] and remove all previous routes from the navigation stack.
+  /// Use this for navigation after logout so the user can't go back to
+  /// authenticated screens using the back button.
+  static void pushAndRemoveAll(BuildContext context, Widget widget) {
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => widget),
+      (Route<dynamic> route) => false,
+    );
+  }
+
 }

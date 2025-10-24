@@ -2,6 +2,7 @@ import { useState, useEffect, ChangeEvent } from "react";
 import Navbar from "../layout/navbar";
 import SearchBar from "../components/ui/searchbar";
 import api from "../services/api";
+import { useInventory } from "../contexts/InventoryContext"; // ✅ added
 
 interface InventoryItem {
   inventory_id: number;
@@ -9,9 +10,9 @@ interface InventoryItem {
   product_name: string;
   sku?: string | null;
   category?: string | null;
-  quantity: number; // maps to total_stock
+  quantity: number;
   image?: string | null;
-  stock_status?: string; // "in_stock", "low_stock", "out_of_stock"
+  stock_status?: string;
 }
 
 interface HistoryItem {
@@ -27,11 +28,20 @@ interface InventoryProps {
   onStockChange?: (historyItem: HistoryItem) => void;
 }
 
+// Helper function to determine stock status
+function getStockStatus(quantity: number): string {
+  if (quantity === 0) return "out_of_stock";
+  if (quantity > 0 && quantity <= 5) return "low_stock";
+  return "in_stock";
+}
+
 export default function Inventory({ onStockChange }: InventoryProps) {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [inputQuantities, setInputQuantities] = useState<Record<number, number | "">>({});
+
+  const { addHistory } = useInventory(); // ✅ access shared history context
 
   // ✅ Fetch inventory items from backend
   useEffect(() => {
@@ -48,9 +58,10 @@ export default function Inventory({ onStockChange }: InventoryProps) {
           sku: item.product.sku ?? null,
           category: item.product.category ?? null,
           quantity: item.product.inventory?.total_stock ?? item.total_stock ?? 0,
-          image: item.product.image_url
-            ? `${import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"}/${item.product.image_url}`
-            : null,
+        image: item.product.image_url
+  ? `${import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"}/media/${item.product.image_url}`
+  : null,
+
           stock_status: item.product.inventory?.stock_status ?? "unknown",
         }));
 
@@ -64,34 +75,40 @@ export default function Inventory({ onStockChange }: InventoryProps) {
 
     fetchItems();
   }, []);
+  
 
-  // ✅ Update local state + add to history
-  const updateItem = (product_id: number, newQuantity: number) => {
-    setItems((prev) => {
-      const target = prev.find((i) => i.product_id === product_id);
-      if (!target) return prev;
+//history
+  const updateItem = (product_id: number, newQuantity: number, clickChange = 0) => {
+  setItems((prev) => {
+    const target = prev.find((i) => i.product_id === product_id);
+    if (!target) return prev;
 
-      const change = newQuantity - target.quantity;
+    const updated = prev.map((i) =>
+      i.product_id === product_id
+        ? {
+            ...i,
+            quantity: newQuantity,
+            stock_status: getStockStatus(newQuantity),
+          }
+        : i
+    );
 
-      const updated = prev.map((i) =>
-        i.product_id === product_id ? { ...i, quantity: newQuantity } : i
-      );
+    const sorted = [...updated].sort((a, b) => b.quantity - a.quantity);
 
-      const sorted = [...updated].sort((a, b) => b.quantity - a.quantity);
+    const record: HistoryItem = {
+      product_id: target.product_id,
+      product_name: target.product_name,
+      image: target.image ?? null,
+      change: clickChange, // ✅ Only record the number of clicks (+1 or -1)
+      quantity: newQuantity,
+      date: new Date().toISOString(),
+    };
 
-      const record: HistoryItem = {
-        product_id: target.product_id,
-        product_name: target.product_name,
-        image: target.image ?? null,
-        change,
-        quantity: newQuantity,
-        date: new Date().toISOString(),
-      };
-
-      onStockChange?.(record);
-      return sorted;
-    });
-  };
+    addHistory(record); // ✅ push to shared context
+    onStockChange?.(record);
+    return sorted;
+  });
+};
 
   // ✅ Save quantity change via PATCH to backend
   const handleSave = async (product_id: number) => {
@@ -111,35 +128,47 @@ export default function Inventory({ onStockChange }: InventoryProps) {
     }
   };
 
-  // ✅ Increase quantity
-  const handleIncrease = async (product_id: number) => {
-    const item = items.find((i) => i.product_id === product_id);
-    if (!item || !item.sku) return;
+const handleIncrease = async (product_id: number) => {
+  const item = items.find((i) => i.product_id === product_id);
+  if (!item || !item.sku) return;
 
-    const newQuantity = item.quantity + 1;
-    try {
-      await api.patch(`/products/${item.sku}/`, { quantity: newQuantity });
-      updateItem(product_id, newQuantity);
-      setInputQuantities((prev) => ({ ...prev, [product_id]: newQuantity }));
-    } catch (err) {
-      console.error("❌ Failed to increase stock:", err);
-    }
-  };
+  const newQuantity = item.quantity + 1;
 
-  // ✅ Decrease quantity
-  const handleDecrease = async (product_id: number) => {
-    const item = items.find((i) => i.product_id === product_id);
-    if (!item || !item.sku) return;
+  try {
+    // ✅ 1. Update product stock
+    await api.patch(`/products/${item.sku}/`, { quantity: newQuantity });
 
-    const newQuantity = Math.max(item.quantity - 1, 0);
-    try {
-      await api.patch(`/products/${item.sku}/`, { quantity: newQuantity });
-      updateItem(product_id, newQuantity);
-      setInputQuantities((prev) => ({ ...prev, [product_id]: newQuantity }));
-    } catch (err) {
-      console.error("❌ Failed to decrease stock:", err);
-    }
-  };
+    // ✅ 2. Update local state
+    updateItem(product_id, newQuantity, +1);
+    setInputQuantities((prev) => ({ ...prev, [product_id]: newQuantity }));
+
+    // ✅ 3. Notify dashboard to refresh its history (instead of posting)
+    localStorage.setItem("refreshHistory", Date.now().toString());
+  } catch (err) {
+    console.error("❌ Failed to increase stock:", err);
+  }
+};
+
+const handleDecrease = async (product_id: number) => {
+  const item = items.find((i) => i.product_id === product_id);
+  if (!item || !item.sku) return;
+
+  const newQuantity = Math.max(item.quantity - 1, 0);
+
+  try {
+    // ✅ 1. Update product stock
+    await api.patch(`/products/${item.sku}/`, { quantity: newQuantity });
+
+    // ✅ 2. Update local state
+    updateItem(product_id, newQuantity, -1);
+    setInputQuantities((prev) => ({ ...prev, [product_id]: newQuantity }));
+
+    // ✅ 3. Notify dashboard to refresh its history
+    localStorage.setItem("refreshHistory", Date.now().toString());
+  } catch (err) {
+    console.error("❌ Failed to decrease stock:", err);
+  }
+};
 
   // ✅ Handle quantity input changes
   const handleInputChange = (product_id: number, value: string) => {
@@ -154,9 +183,12 @@ export default function Inventory({ onStockChange }: InventoryProps) {
     }
   };
 
-  const filteredItems = items.filter((i) =>
+const filteredItems = items
+  .filter((i) =>
     i.product_name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  )
+  .sort((a, b) => a.product_name.localeCompare(b.product_name));
+
 
   return (
     <section className="bg-[#F2F7FA] min-h-screen p-8 pt-24">
@@ -171,14 +203,7 @@ export default function Inventory({ onStockChange }: InventoryProps) {
               placeholder="Search Here..."
             />
           </div>
-          <div className="flex justify-center sm:justify-start space-x-6">
-            <button className="flex items-center gap-1 text-gray-600 hover:text-gray-900">
-              Categories
-            </button>
-            <button className="flex items-center gap-1 text-gray-600 hover:text-gray-900">
-              Status
-            </button>
-          </div>
+          
         </div>
 
         {/* 📦 Inventory Grid */}

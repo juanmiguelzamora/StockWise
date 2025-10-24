@@ -1,38 +1,37 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 
-interface Product {
-  id: number;
-  name: string;
-  stock: number;
-  change?: number;
-  description?: string;
-  date?: string;
+interface HistoryItem {
+  product_id: number;
+  product_name: string;
+  image?: string | null;
+  change: number;
+  quantity: number;
+  date: string;
 }
 
 interface InventoryContextType {
-  items: Product[];
-  setItems: React.Dispatch<React.SetStateAction<Product[]>>;
-  handleStockChange: (item: Product) => void;
+  history: HistoryItem[];
+  addHistory: (item: HistoryItem) => void;
 }
 
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
 
-export const InventoryProvider = ({ children }: { children: ReactNode }) => {
-  const [items, setItems] = useState<Product[]>([]);
+export function InventoryProvider({ children }: { children: ReactNode }) {
+  const [history, setHistory] = useState<HistoryItem[]>([]);
 
-  const handleStockChange = (item: Product) => {
-    setItems(prev => [item, ...prev]);
+  const addHistory = (item: HistoryItem) => {
+    setHistory((prev) => [item, ...prev]); // add to top
   };
 
   return (
-    <InventoryContext.Provider value={{ items, setItems, handleStockChange }}>
+    <InventoryContext.Provider value={{ history, addHistory }}>
       {children}
     </InventoryContext.Provider>
   );
-};
+}
 
-export const useInventory = () => {
+export function useInventory() {
   const ctx = useContext(InventoryContext);
-  if (!ctx) throw new Error("useInventory must be used inside <InventoryProvider>");
+  if (!ctx) throw new Error("useInventory must be used within InventoryProvider");
   return ctx;
-};
+}

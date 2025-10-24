@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:mobile/common/helper/navigator/app_navigator.dart';
 import 'package:mobile/domain/auth/usecases/is_logged_out.dart';
-import 'package:mobile/presentation/Profile/pages/change_pass.dart';
-import 'package:mobile/presentation/Profile/pages/edit_profile_page.dart';
 import 'package:mobile/presentation/Profile/pages/history_page.dart';
 import 'package:mobile/presentation/Profile/widgets/profile_menu_item.dart';
 import 'package:mobile/presentation/auth/pages/signin.dart';
 import 'package:mobile/presentation/inventory/provider/inventory_provider.dart';
-import 'package:mobile/presentation/trends/pages/trends_page.dart';
 import 'package:mobile/service_locator.dart';
 import 'package:provider/provider.dart';
-
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -54,19 +51,32 @@ class ProfilePage extends StatelessWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Logged out successfully')),
         );
-        AppNavigator.push(context,SigninPage());
+        // Clear navigation stack so pressing back won't return to profile
+        AppNavigator.pushAndRemoveAll(context, SigninPage());
       },
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    // ✅ Ensures status bar icons are always visible
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent, // Transparent for modern look
+      statusBarIconBrightness: Brightness.dark, // Icons visible on light bg
+      statusBarBrightness: Brightness.light, // For iOS compatibility
+    ));
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        backgroundColor: Colors.white,
+        elevation: 1,
         centerTitle: true,
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Colors.white,
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
+        ),
         title: const Text(
           "Profile",
           style: TextStyle(
@@ -75,55 +85,53 @@ class ProfilePage extends StatelessWidget {
           ),
         ),
       ),
-      body: Column(
-        children: [
-          const SizedBox(height: 20),
+      body: SafeArea(
+        child: Column(
+          children: [
+            const SizedBox(height: 20),
 
-          const CircleAvatar(
-            radius: 50,
-            backgroundColor: Colors.blue,
-            child: CircleAvatar(
-              radius: 48,
-              backgroundColor: Colors.white,
-              child: Icon(Icons.person, size: 60, color: Colors.blue),
+            const CircleAvatar(
+              radius: 50,
+              backgroundColor: Colors.blue,
+              child: CircleAvatar(
+                radius: 48,
+                backgroundColor: Colors.white,
+                child: Icon(Icons.person, size: 60, color: Colors.blue),
+              ),
             ),
-          ),
 
-          const SizedBox(height: 12),
+            const SizedBox(height: 12),
 
-          // Text(
-          //   user.username,
-          //   style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          // ), uncomment when username is available
+            const SizedBox(height: 20),
 
-       
-          const SizedBox(height: 20),
-
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: [
-                ProfileMenuItem(icon: Icons.edit, title: "Edit Profile", onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TrendsPage()))),
-                ProfileMenuItem(
-                  icon: Icons.history,
-                  title: "History",
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ChangeNotifierProvider(
-                        create: (_) => sl<InventoryProvider>(),
-                        child: const InventoryHistoryPage(),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                physics: const BouncingScrollPhysics(),
+                children: [
+                  ProfileMenuItem(
+                    icon: Icons.history,
+                    title: "History",
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ChangeNotifierProvider(
+                          create: (_) => sl<InventoryProvider>(),
+                          child: const InventoryHistoryPage(),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                ProfileMenuItem(icon: Icons.lock, title: "Change password", onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChangePasswordPage()))),
-                ProfileMenuItem(icon: Icons.logout, title: "Log out", onTap: () => _confirmLogout(context),
-                ),
-              ],
+                  ProfileMenuItem(
+                    icon: Icons.logout,
+                    title: "Log out",
+                    onTap: () => _confirmLogout(context),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
