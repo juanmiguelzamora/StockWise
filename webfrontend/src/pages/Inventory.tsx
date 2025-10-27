@@ -2,7 +2,18 @@ import { useState, useEffect, ChangeEvent } from "react";
 import Navbar from "../layout/navbar";
 import SearchBar from "../components/ui/searchbar";
 import api from "../services/api";
-import { useInventory } from "../contexts/InventoryContext"; // ✅ added
+import { useInventory } from "../contexts/InventoryContext"; 
+
+
+function formatQuantity(num: number): string {
+  if (num >= 1000000) {
+    return (Math.floor(num / 100000) / 10).toString().replace(/\.0$/, "") + "M";
+  }
+  if (num >= 1000) {
+    return (Math.floor(num / 100) / 10).toString().replace(/\.0$/, "") + "k";
+  }
+  return num.toString();
+}
 
 interface InventoryItem {
   inventory_id: number;
@@ -203,7 +214,7 @@ const filteredItems = items
               placeholder="Search Here..."
             />
           </div>
-          
+         
         </div>
 
         {/* 📦 Inventory Grid */}
@@ -241,7 +252,8 @@ const filteredItems = items
               <div className="mt-2 space-y-1 text-center">
                 <p className="text-sm text-gray-500">SKU: {item.sku ?? "N/A"}</p>
                 <p className="text-sm text-gray-500">Category: {item.category ?? "—"}</p>
-                <p className="text-sm text-gray-700">Qty: {item.quantity}</p>
+                <p className="text-sm text-gray-700">Qty: {formatQuantity(item.quantity)}</p>
+
               </div>
 
               {/* Actions */}

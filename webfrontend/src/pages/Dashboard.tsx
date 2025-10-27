@@ -6,6 +6,7 @@ import iconOverstock from "../assets/icon1.png";
 import iconOutOfStock from "../assets/icon2.png";
 import iconLowStock from "../assets/icon3.png";
 
+
 import {
   Bar,
   BarChart,
@@ -19,7 +20,6 @@ import {
 import LoadingSpinner from "../components/ui/loadingspinner";
 import Navbar from "../layout/navbar";
 
-// ================== TYPES ==================
 interface BackendProduct {
   id?: number;
   sku?: string;
@@ -27,7 +27,7 @@ interface BackendProduct {
   description?: string;
   category?: string;
   image_url?: string;
-  updated_at?: string; // ISO date string
+  updated_at?: string; 
   inventory?: {
     stock_in?: number;
     stock_out?: number;
@@ -42,7 +42,7 @@ interface HistoryItem {
   product_name: string;
   sku: string;
   image: string;
-  category?: string; // Optional: Enrich from products if needed
+  category?: string; 
   units_sold: number;
   date: string;
   change: number;
@@ -55,7 +55,6 @@ interface StockData {
   updated_at?: string;
 }
 
-// ================== COMPONENT ==================
 export default function ProtectedDashboard() {
   const [products, setProducts] = useState<BackendProduct[]>([]);
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
@@ -69,15 +68,13 @@ export default function ProtectedDashboard() {
   const navigate = useNavigate();
   const gradientIdIn = useId();
   const gradientIdOut = useId();
-
-  // ================== Fetch Data from Backend ==================
+  
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
-      setError(""); // Reset error on retry
+      setError(""); 
       try {
         const prodRes = await api.get("/products/?ordering=-updated_at");
-        // Improved null handling: Ensure data is array, filter out invalid items
         const rawData = prodRes?.data || [];
         if (!Array.isArray(rawData)) {
           throw new Error("Invalid response format: expected array");
@@ -107,13 +104,12 @@ export default function ProtectedDashboard() {
     fetchProducts();
   }, []);
 
-  // ================== Fetch / Derive History ==================
   useEffect(() => {
-    if (!products.length) return; // wait until products are loaded
+    if (!products.length) return; 
 
     const deriveHistory = () => {
       const derivedHistory: HistoryItem[] = products
-        .filter((p) => p.id && p.name && p.sku) // Filter invalid products
+        .filter((p) => p.id && p.name && p.sku) 
         .map((p) => ({
           id: p.id || 0,
           product_name: p.name || "Unknown Product",
@@ -133,9 +129,9 @@ export default function ProtectedDashboard() {
     };
 
     deriveHistory();
-  }, [products]); // depends on products
+  }, [products]); 
 
-  // ================== Computed Totals ==================
+
   const totalStock = useMemo(
     () => products.reduce((acc, p) => acc + (p.inventory?.total_stock ?? 0), 0),
     [products]
@@ -151,7 +147,7 @@ export default function ProtectedDashboard() {
     [products]
   );
 
-  // ================== Search Filter ==================
+ 
   useEffect(() => {
     if (query === "") {
       setFiltered(historyItems);
@@ -163,7 +159,6 @@ export default function ProtectedDashboard() {
       const out = historyItems.filter((it) => {
         const name = (it.product_name || "").toLowerCase();
         const sku = (it.sku || "").toLowerCase();
-        // Optional: Add category search
         const cat = (it.category || "").toLowerCase();
         return name.includes(q) || sku.includes(q) || cat.includes(q);
       });
@@ -173,16 +168,14 @@ export default function ProtectedDashboard() {
     return () => clearTimeout(id);
   }, [query, historyItems]);
 
-  // ================== Date Helpers ==================
   const formatDate = (dateStr?: string): string => {
   if (!dateStr) return "";
 
   const date = new Date(dateStr);
-  if (isNaN(date.getTime())) return ""; // Invalid date
+  if (isNaN(date.getTime())) return ""; 
 
   const today = new Date();
 
-  // Compare dates in Manila timezone
   const dateManila = new Date(
     date.toLocaleString("en-US", { timeZone: "Asia/Manila" })
   );
@@ -217,7 +210,7 @@ export default function ProtectedDashboard() {
 
 
  const getWeekday = (dateStr?: string): string => {
-  if (!dateStr) return "Sat"; // Default fallback
+  if (!dateStr) return "Sat"; 
   const date = new Date(dateStr);
   if (isNaN(date.getTime())) return "Sat";
   return date.toLocaleDateString("en-US", { 
@@ -225,7 +218,6 @@ export default function ProtectedDashboard() {
     timeZone: "Asia/Manila" 
   });
 };
-  // ================== Chart Computation ==================
   const stockData: StockData[] = useMemo(() => {
     if (!products.length) return [];
 
@@ -250,7 +242,7 @@ export default function ProtectedDashboard() {
       stockOut: grouped[day]?.stockOut ?? 0,
     }));
   }, [products]);
-  // ================== Logout ==================
+  
   const handleLogout = async () => {
     try {
       localStorage.removeItem("access");
@@ -262,7 +254,6 @@ export default function ProtectedDashboard() {
     }
   };
 
-  // ================== Loading/Error States ==================
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center bg-white">
@@ -279,7 +270,6 @@ export default function ProtectedDashboard() {
     );
   }
 
-  // ================== Empty State ==================
   if (!products || products.length === 0) {
     return (
       <div className="h-screen flex items-center justify-center bg-gray-100">

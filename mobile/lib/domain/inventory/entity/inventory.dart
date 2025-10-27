@@ -3,7 +3,7 @@ class Inventory {
   final int stockOut;
   final int totalStock;
   final double averageDailySales;
-  final String stockStatus; // add this to match backend
+  final String stockStatus; 
 
   Inventory({
     required this.stockIn,

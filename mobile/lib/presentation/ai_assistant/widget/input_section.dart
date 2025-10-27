@@ -35,7 +35,7 @@ class InputSection extends StatelessWidget {
                 fontSize: 16, // optional: adjust text size
               ),
               decoration: InputDecoration(
-                hintText: 'Ask me anything about your inventory or trends',
+                hintText: 'Ask about stock, trends, or predictions...',
                 hintStyle: const TextStyle(
                   color: AppColors.textSecondary, // 👈 optional: hint text color
                 ),

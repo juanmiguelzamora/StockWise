@@ -9,21 +9,37 @@ class AiRepositoryImpl implements AiRepository {
 
   @override
   Future<AiResponse> askInventory(String query) async {
-    final model = await remoteDataSource.askInventory(query);  // Assumes this returns AiResponseModel
+    final model = await remoteDataSource.askInventory(query);
+    
     return AiResponse(
-      item: model.item ?? '',
-      currentStock: model.currentStock ?? 0,
-      averageDailySales: model.averageDailySales ?? 0.0,
-      restockNeeded: model.restockNeeded ?? false,
-      recommendation: model.recommendation ?? '',
-      // NEW: Map trend fields (optional)
+      // Query type and general fields
+      queryType: model.queryType,
+      item: model.item,
+      currentStock: model.currentStock,
+      
+      // General inventory fields
+      totalProducts: model.totalProducts,
+      lowStockItems: model.lowStockItems,
+      outOfStockItems: model.outOfStockItems,
+      summary: model.summary,
+      topCategories: model.topCategories?.map((m) => TopCategory(
+        category: m.category,
+        stock: m.stock,
+      )).toList(),
+      
+      // Common fields
+      averageDailySales: model.averageDailySales,
+      restockNeeded: model.restockNeeded,
+      recommendation: model.recommendation,
+      
+      // Trend fields
       predictedTrends: model.predictedTrends?.map((m) => PredictedTrend(
         keyword: m.keyword,
         hotScore: m.hotScore,
         suggestion: m.suggestion,
       )).toList(),
-      restockSuggestions: model.restockSuggestions ?? [],
-      overallPrediction: model.overallPrediction ?? '',
+      restockSuggestions: model.restockSuggestions,
+      overallPrediction: model.overallPrediction,
     );
   }
 }

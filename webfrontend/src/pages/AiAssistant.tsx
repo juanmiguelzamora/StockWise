@@ -28,7 +28,8 @@ const AIAssistant: React.FC = () => {
 
   // ✅ Quick Actions
   const quickActions = [
-    { title: "Check Stock", query: "Current stock for gray pants" },
+    
+    { title: "Check Stock", query: "What is the total stock?" },
     { title: "Seasonal Trends", query: "predict christmas trends for clothing" },
   ];
 
@@ -48,22 +49,49 @@ const AIAssistant: React.FC = () => {
       if (res.data) {
         const r = res.data.response || res.data;
 
-        if (r.item) {
+        // Handle general inventory response
+        if (r.query_type === "general_inventory") {
+          aiResponse = `📊 **Overall Inventory Status**\n\n`;
+          aiResponse += `📦 Total Products: ${r.total_products}\n`;
+          aiResponse += `📈 Total Stock: ${r.total_stock.toLocaleString()} units\n`;
+          aiResponse += `📉 Average Daily Sales: ${r.average_daily_sales.toFixed(2)} units/day\n`;
+          aiResponse += `⚠️ Low Stock Items: ${r.low_stock_items}\n`;
+          aiResponse += `❌ Out of Stock Items: ${r.out_of_stock_items}\n\n`;
+          
+          if (r.top_categories && r.top_categories.length > 0) {
+            aiResponse += `🏆 **Top Categories by Stock:**\n`;
+            r.top_categories.forEach((cat: any, i: number) => {
+              aiResponse += `${i + 1}. ${cat.category}: ${cat.stock.toLocaleString()} units\n`;
+            });
+            aiResponse += `\n`;
+          }
+          
+          aiResponse += `${r.restock_needed ? "⚠️" : "✅"} ${r.summary}\n\n`;
+          aiResponse += `💡 ${r.recommendation}`;
+        }
+        // Handle item-specific response
+        else if (r.item) {
           aiResponse = `🛒 **${r.item}** — Current stock: ${r.current_stock}, Average daily sales: ${r.average_daily_sales}. ${
             r.restock_needed ? "⚠️ Restock needed!" : "✅ Stock sufficient."
           }\n\n💡 ${r.recommendation}`;
-        } else if (r.category) {
+        }
+        // Handle category response
+        else if (r.category) {
           aiResponse = `📦 **${r.category}** — Total stock: ${r.total_stock}, Avg daily sales: ${r.average_daily_sales}. ${
             r.restock_needed ? "⚠️ Restock needed!" : "✅ Stock healthy."
           }\n\n💡 ${r.recommendation}`;
-        } else if (r.predicted_trends) {
+        }
+        // Handle trend predictions
+        else if (r.predicted_trends) {
           aiResponse = `📊 **Inventory Trend Forecast**\n\n${r.predicted_trends
             .map(
               (t: any, i: number) =>
                 `${i + 1}. **${t.keyword}** — 🔥 Trend Score: ${t.hot_score}\n   💡 ${t.suggestion}`
             )
             .join("\n\n")}\n\n🔮 *Overall Insight:* ${r.overall_prediction}`;
-        } else {
+        }
+        // Fallback for unknown response types
+        else {
           aiResponse = JSON.stringify(r, null, 2);
         }
       }

@@ -3,7 +3,7 @@ import 'package:mobile/domain/ai_assistant/entity/ai_response.dart';
 import 'package:mobile/domain/ai_assistant/entity/chat_message.dart';  // NEW: Import
 
 abstract class AiState extends Equatable {
-  final List<ChatMessage> history;  // NEW: Shared history across states
+  final List<ChatMessage> history;  // Shared history across states
 
   const AiState({this.history = const []});
 
