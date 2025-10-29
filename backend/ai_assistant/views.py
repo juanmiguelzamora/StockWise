@@ -91,7 +91,7 @@ def _find_best_product_match(query: str) -> Optional[Product]:
     if not query:
         return None
 
-    # FIXED: Changed to all products; recent sales filter was excluding inactive items
+    # Changed to all products; recent sales filter was excluding inactive items
     base_qs = Product.objects.all()
     logger.debug(f"MATCH DEBUG | Total products available: {base_qs.count()}")
 
@@ -100,7 +100,7 @@ def _find_best_product_match(query: str) -> Optional[Product]:
     match_qs = base_qs.filter(q_obj)
     logger.debug(f"MATCH DEBUG | Direct match count for '{query}': {match_qs.count()}")
     if match_qs.exists():
-        # FIXED: Simplified to .first() to avoid ordering issues on empty sales_history
+        # Simplified to .first() to avoid ordering issues on empty sales_history
         match = match_qs.first()
         logger.debug(f"MATCH DEBUG | Direct match selected: {match.name} (ID: {match.id})")
         return match
@@ -132,7 +132,6 @@ def _find_best_product_match(query: str) -> Optional[Product]:
         match = best[0].title()
         ret = base_qs.filter(Q(name__iexact=match) | Q(sku__iexact=match)).first()
         logger.debug(f"MATCH DEBUG | Difflib match attempted '{match}' -> selected: {ret.name if ret else 'None'}")
-        # FIXED: Simplified to .first()
         return ret
 
     # Category fallback
@@ -610,7 +609,7 @@ def ask_llm(request):
         else:
             prompt = _build_prompt(facts, user_query, supplier_info, forecast)
 
-            # FIXED: Only call LLM if trend or found (product/category match); else direct fallback to avoid hallucination
+            # Only call LLM if trend or found (product/category match); else direct fallback to avoid hallucination
             if is_trend_query or found:
                 parsed = _call_ollama(DEFAULT_MODEL, prompt, facts) or _safe_fallback(facts, found, is_category=is_category_query)
             else:
