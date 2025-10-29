@@ -44,7 +44,6 @@ class AuthRepositoryImpl extends AuthRepository {
     return await _service.logout();
   }
 
-  @override
   Future<Either> refreshToken() async {
     return await _service.refreshToken();
   }

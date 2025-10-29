@@ -3,22 +3,19 @@ import 'package:mobile/domain/inventory/entity/inventory.dart';
 
 class InventoryModel extends Inventory {
   final int id;
+  @override
   final String stockStatus;
   final ProductModel? product; // Add product field
 
   InventoryModel({
     required this.id,
-    required int stockIn,
-    required int stockOut,
-    required int totalStock,
-    required double averageDailySales,
+    required super.stockIn,
+    required super.stockOut,
+    required super.totalStock,
+    required super.averageDailySales,
     required this.stockStatus,
     this.product, // Add to constructor
   }) : super(
-          stockIn: stockIn,
-          stockOut: stockOut,
-          totalStock: totalStock,
-          averageDailySales: averageDailySales,
           stockStatus: stockStatus,
         );
 

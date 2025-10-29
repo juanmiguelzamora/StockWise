@@ -86,7 +86,7 @@ class _ProductListPageState extends State<ProductListPage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha(13),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -117,7 +117,7 @@ class _ProductListPageState extends State<ProductListPage> {
             value: provider.categoryFilter ?? "All",
             items: [
               "All",
-              ...provider.products.map((p) => p.category).toSet().toList(),
+              ...provider.products.map((p) => p.category).toSet(),
             ],
             onChanged: (val) =>
                 provider.setCategoryFilter(val == "All" ? null : val),
@@ -187,7 +187,7 @@ class _ProductListPageState extends State<ProductListPage> {
             SvgPicture.asset(
               AppVectors.stockcube,
               height: 80,
-              color: Colors.grey.shade400,
+              colorFilter: ColorFilter.mode(Colors.grey.shade400, BlendMode.srcIn),
             ),
             const SizedBox(height: 16),
             Text(
@@ -289,12 +289,12 @@ class _ProductListPageState extends State<ProductListPage> {
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withAlpha(13),
                 blurRadius: 6,
                 offset: const Offset(0, 3),
               ),
             ],
-            border: Border.all(color: Colors.grey.withOpacity(0.2), width: 1),
+            border: Border.all(color: Colors.grey.withAlpha(51), width: 1),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<T>(

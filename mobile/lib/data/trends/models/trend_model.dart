@@ -3,11 +3,11 @@ import 'package:mobile/domain/trends/entity/trend.dart';
 
 class TrendModel extends Trend {
   TrendModel({
-    required String keyword,
-    required String season,
-    required double score,
-    required String source,
-  }) : super(keyword: keyword, season: season, score: score, source: source);
+    required super.keyword,
+    required super.season,
+    required super.score,
+    required super.source,
+  });
 
   factory TrendModel.fromJson(Map<String, dynamic> json) {
     return TrendModel(

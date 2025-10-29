@@ -32,8 +32,8 @@ class ProductPopup extends StatelessWidget {
     final product = state.product;
 
     String? imageUrl;
-    if (product != null && (product.imageUrl ?? '').isNotEmpty) {
-      imageUrl = product.imageUrl!.startsWith('http')
+    if (product != null && product.imageUrl.isNotEmpty) {
+      imageUrl = product.imageUrl.startsWith('http')
           ? product.imageUrl
           : '$mediaBaseUrl${product.imageUrl}';
     }

@@ -41,6 +41,8 @@ class ProfilePage extends StatelessWidget {
     final logoutUseCase = sl<LogoutUseCase>();
     final result = await logoutUseCase();
 
+    if (!context.mounted) return;
+
     result.fold(
       (error) {
         ScaffoldMessenger.of(context).showSnackBar(

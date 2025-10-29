@@ -70,7 +70,7 @@ class _QrScannerPageState extends State<QrScannerPage>
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                   child: Container(
-                    color: Colors.black.withOpacity(0.6),
+                    color: Colors.black.withAlpha(153),
                   ),
                 ),
               ),
@@ -99,7 +99,7 @@ class _QrScannerPageState extends State<QrScannerPage>
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withAlpha(204),
                       width: 2,
                     ),
                   ),
@@ -121,7 +121,7 @@ class _QrScannerPageState extends State<QrScannerPage>
                                 gradient: LinearGradient(
                                   colors: [
                                     Colors.transparent,
-                                    AppColors.primary.withOpacity(0.9),
+                                    AppColors.primary.withAlpha(230),
                                     Colors.transparent,
                                   ],
                                 ),
@@ -169,7 +169,7 @@ class _QrScannerPageState extends State<QrScannerPage>
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
                     child: Container(
-                      color: Colors.black.withOpacity(0.5),
+                      color: Colors.black.withAlpha(128),
                       child: Center(
                         child: ConstrainedBox(
                           constraints:

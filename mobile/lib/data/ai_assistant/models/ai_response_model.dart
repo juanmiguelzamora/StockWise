@@ -50,9 +50,7 @@ class AiResponseModel {
         )
       ];
       // Generate a default overall prediction if missing
-      if (overallPred == null) {
-        overallPred = 'Trend analysis based on current data';
-      }
+      overallPred ??= 'Trend analysis based on current data';
     }
     
     return AiResponseModel(

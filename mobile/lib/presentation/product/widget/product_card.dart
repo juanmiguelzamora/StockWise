@@ -57,7 +57,7 @@ class ProductCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha(13),
             blurRadius: 6,
             offset: const Offset(0, 3),
           ),
@@ -129,7 +129,7 @@ class ProductCard extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: _statusColor(status).withOpacity(0.1),
+                            color: _statusColor(status).withAlpha(26),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -204,13 +204,13 @@ class ProductCard extends StatelessWidget {
         height: 30,
         decoration: BoxDecoration(
           color: onTap == null
-              ? Colors.grey.withOpacity(0.1)
-              : color.withOpacity(0.12),
+              ? Colors.grey.withAlpha(26)
+              : color.withAlpha(31),
           shape: BoxShape.circle,
           border: Border.all(
             color: onTap == null
-                ? Colors.grey.withOpacity(0.4)
-                : color.withOpacity(0.8),
+                ? Colors.grey.withAlpha(102)
+                : color.withAlpha(204),
             width: 1.3,
           ),
         ),

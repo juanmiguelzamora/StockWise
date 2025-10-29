@@ -26,7 +26,6 @@ class ChatArea extends StatefulWidget {
 
 class _ChatAreaState extends State<ChatArea> with TickerProviderStateMixin {
   late AnimationController _slideController;
-  late Animation<Offset> _slideAnimation;
 
   @override
   void initState() {
@@ -35,10 +34,6 @@ class _ChatAreaState extends State<ChatArea> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 500),
       vsync: this,
     );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOutBack));
     if (widget.state is AiResponseLoaded) {
       _slideController.forward();
     }
@@ -64,7 +59,7 @@ class _ChatAreaState extends State<ChatArea> with TickerProviderStateMixin {
     if (widget.state is AiLoading) {
       return Shimmer.fromColors(
         baseColor: AppColors.background,
-        highlightColor: AppColors.primary.withOpacity(0.2),
+        highlightColor: AppColors.primary.withAlpha(51),
         child: ListView.builder(
           controller: widget.scrollController,
           itemCount: 3,

@@ -22,9 +22,9 @@ class AiResponseBubble extends StatelessWidget {
           margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.error.withOpacity(0.08),
+            color: AppColors.error.withAlpha(20),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.error.withOpacity(0.3)),
+            border: Border.all(color: AppColors.error.withAlpha(77)),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,7 +59,7 @@ class AiResponseBubble extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: AppColors.shadow.withOpacity(0.1),
+              color: AppColors.shadow.withAlpha(26),
               blurRadius: 8,
               offset: const Offset(0, 3),
             ),
@@ -78,7 +78,7 @@ class AiResponseBubble extends StatelessWidget {
                     gradient: LinearGradient(
                       colors: [
                         AppColors.primary,
-                        AppColors.primary.withOpacity(0.8),
+                        AppColors.primary.withAlpha(204),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -100,7 +100,7 @@ class AiResponseBubble extends StatelessWidget {
                   ),
                 ),
                 Icon(Icons.history,
-                    size: 16, color: AppColors.textSecondary.withOpacity(0.8)),
+                    size: 16, color: AppColors.textSecondary.withAlpha(204)),
               ],
             ),
             const SizedBox(height: 12),
@@ -128,12 +128,12 @@ class AiResponseBubble extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                AppColors.primary.withOpacity(0.1),
-                AppColors.blueLight.withOpacity(0.2),
+                AppColors.primary.withAlpha(26),
+                AppColors.blueLight.withAlpha(51),
               ],
             ),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+            border: Border.all(color: AppColors.primary.withAlpha(51)),
           ),
           child: Row(
             children: [
@@ -264,7 +264,7 @@ class AiResponseBubble extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.grayLight,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.primary.withOpacity(0.15)),
+              border: Border.all(color: AppColors.primary.withAlpha(38)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -296,18 +296,18 @@ class AiResponseBubble extends StatelessWidget {
               gradient: LinearGradient(
                 colors: [
                   (response.restockNeeded ?? false)
-                      ? AppColors.warning.withOpacity(0.1)
-                      : AppColors.success.withOpacity(0.1),
+                      ? AppColors.warning.withAlpha(26)
+                      : AppColors.success.withAlpha(26),
                   (response.restockNeeded ?? false)
-                      ? AppColors.error.withOpacity(0.1)
-                      : AppColors.primary.withOpacity(0.1),
+                      ? AppColors.error.withAlpha(26)
+                      : AppColors.primary.withAlpha(26),
                 ],
               ),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: (response.restockNeeded ?? false)
-                    ? AppColors.warning.withOpacity(0.3)
-                    : AppColors.success.withOpacity(0.3),
+                    ? AppColors.warning.withAlpha(77)
+                    : AppColors.success.withAlpha(77),
               ),
             ),
             child: Row(
@@ -349,9 +349,9 @@ class AiResponseBubble extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withAlpha(20),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withAlpha(51)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -390,7 +390,7 @@ class AiResponseBubble extends StatelessWidget {
             color: AppColors.grayLight,
             borderRadius: BorderRadius.circular(12),
             border:
-                Border.all(color: AppColors.primary.withOpacity(0.15), width: 1),
+                Border.all(color: AppColors.primary.withAlpha(38), width: 1),
           ),
           child: Row(
             children: [
@@ -440,15 +440,15 @@ class AiResponseBubble extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                AppColors.primary.withOpacity(0.1),
-                AppColors.blueLight.withOpacity(0.3),
+                AppColors.primary.withAlpha(26),
+                AppColors.blueLight.withAlpha(77),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(12),
             border:
-                Border.all(color: AppColors.primary.withOpacity(0.3), width: 1),
+                Border.all(color: AppColors.primary.withAlpha(77), width: 1),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -484,9 +484,9 @@ class AiResponseBubble extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.08),
+            color: AppColors.primary.withAlpha(20),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+            border: Border.all(color: AppColors.primary.withAlpha(51)),
           ),
           child: Row(
             children: [
@@ -524,7 +524,7 @@ class AiResponseBubble extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: AppColors.grayLight,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.primary.withOpacity(0.15)),
+                  border: Border.all(color: AppColors.primary.withAlpha(38)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -534,7 +534,7 @@ class AiResponseBubble extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.1),
+                            color: AppColors.primary.withAlpha(26),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Row(
@@ -543,7 +543,7 @@ class AiResponseBubble extends StatelessWidget {
                               Icon(Icons.trending_up, size: 14, color: AppColors.primary),
                               const SizedBox(width: 4),
                               Text(
-                                '${trend.hotScore.toStringAsFixed(0)}',
+                                trend.hotScore.toStringAsFixed(0),
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,

@@ -69,7 +69,7 @@ class Header extends StatelessWidget {
         // Profile avatar with shimmer animation
         CircleAvatar(
           radius: 24,
-          backgroundColor: AppColors.primary.withOpacity(0.2),
+          backgroundColor: AppColors.primary.withAlpha(51),
           child: Icon(
             Icons.person,
             size: 28,
@@ -96,7 +96,7 @@ class Header extends StatelessWidget {
                 user.email,
                 style: TextStyle(
                   fontSize: 14,
-                  color: AppColors.textPrimary.withOpacity(0.8),
+                  color: AppColors.textPrimary.withAlpha(204),
                 ),
                 overflow: TextOverflow.ellipsis,
               ),

@@ -3,6 +3,7 @@ import 'package:mobile/domain/product/repository/product_repository.dart';
 import 'package:mobile/domain/product/usecases/get_product_by_sku.dart';
 
 class GetProductBySkuImpl implements GetProductBySku {
+  @override
   final ProductRepository repository;
 
   GetProductBySkuImpl(this.repository);

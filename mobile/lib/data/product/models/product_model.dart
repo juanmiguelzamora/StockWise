@@ -2,19 +2,16 @@ import 'package:mobile/domain/product/entity/product.dart';
 import 'package:mobile/data/inventory/models/inventory_model.dart';
 
 class ProductModel extends Product {
+  @override
   final InventoryModel? inventory;
 
   ProductModel({
-    required String sku,
-    required String name,
-    required String category,
-    required String imageUrl,
+    required super.sku,
+    required super.name,
+    required super.category,
+    required super.imageUrl,
     this.inventory,
   }) : super(
-          sku: sku,
-          name: name,
-          category: category,
-          imageUrl: imageUrl,
           inventory: inventory,
         );
 

@@ -13,7 +13,11 @@ class _InventoryListState extends State<InventoryList> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => context.read<InventoryProvider>().fetchInventory());
+    Future.microtask(() {
+      if (mounted) {
+        context.read<InventoryProvider>().fetchInventory();
+      }
+    });
   }
 
   @override
@@ -74,7 +78,7 @@ class _InventoryListState extends State<InventoryList> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha(13),
             blurRadius: 6,
             offset: const Offset(0, 3),
           ),
@@ -181,7 +185,7 @@ class _InventoryListState extends State<InventoryList> {
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withAlpha(8),
             blurRadius: 3,
             offset: const Offset(0, 1),
           ),
