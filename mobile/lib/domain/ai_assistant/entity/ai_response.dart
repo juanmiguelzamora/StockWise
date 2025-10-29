@@ -1,26 +1,39 @@
 class AiResponse {
-  final String? item; // Or category for aggregates
-  final int? currentStock; // Or total_stock for categories
+  final String? queryType; 
+  final String? item; 
+  final int? currentStock; 
+  final int? totalProducts;
   final double? averageDailySales;
   final bool? restockNeeded;
   final String? recommendation;
-  // NEW: For trend predictions
+  final int? lowStockItems; 
+  final int? outOfStockItems; 
+  final String? summary; 
+  final List<TopCategory>? topCategories; 
+  // For trend predictions
   final List<PredictedTrend>? predictedTrends;
   final List<String>? restockSuggestions;
   final String? overallPrediction;
 
   AiResponse({
+    this.queryType,
     this.item,
     this.currentStock,
+    this.totalProducts,
     this.averageDailySales,
     this.restockNeeded,
     this.recommendation,
+    this.lowStockItems,
+    this.outOfStockItems,
+    this.summary,
+    this.topCategories,
     this.predictedTrends,
     this.restockSuggestions,
     this.overallPrediction,
   });
 
   bool get isTrendResponse => predictedTrends != null && predictedTrends!.isNotEmpty;
+  bool get isGeneralInventory => queryType == 'general_inventory';
 
   // Optional: Factory for backward compatibility
   factory AiResponse.inventory({
@@ -49,5 +62,15 @@ class PredictedTrend {
     required this.keyword,
     required this.hotScore,
     required this.suggestion,
+  });
+}
+
+class TopCategory {
+  final String category;
+  final int stock;
+
+  TopCategory({
+    required this.category,
+    required this.stock,
   });
 }

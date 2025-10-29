@@ -3,6 +3,7 @@ import random
 import time
 import logging
 from urllib.parse import urljoin, quote_plus
+from functools import wraps
 
 import requests
 from bs4 import BeautifulSoup
@@ -13,10 +14,33 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException, WebDriverException
 from utils.fallbacks import generate_fallback_entries
 
 
 logger = logging.getLogger(__name__)
+
+# Retry decorator for network requests
+def retry_on_failure(max_attempts=3, delay=2, backoff=2):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            attempts = 0
+            current_delay = delay
+            while attempts < max_attempts:
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    attempts += 1
+                    if attempts >= max_attempts:
+                        logger.error(f"{func.__name__} failed after {max_attempts} attempts: {e}")
+                        raise
+                    logger.warning(f"{func.__name__} attempt {attempts} failed: {e}. Retrying in {current_delay}s...")
+                    time.sleep(current_delay)
+                    current_delay *= backoff
+            return None
+        return wrapper
+    return decorator
 
 # ----------------------------
 # Configuration
@@ -54,23 +78,35 @@ def _requests_session():
     # small retry/backoff could be added here if you'd like
     return s
 
-def _selenium_driver_with_ua(ua: str):
+def _selenium_driver_with_ua(ua: str, headless=True):
     opts = Options()
-    opts.add_argument("--headless=new")
+    if headless:
+        opts.add_argument("--headless=new")
     opts.add_argument("--no-sandbox")
     opts.add_argument("--disable-gpu")
     opts.add_argument("--disable-dev-shm-usage")
+    opts.add_argument("--disable-blink-features=AutomationControlled")
     opts.add_argument("--window-size=1920,1080")
     opts.add_argument(f"user-agent={ua}")
-
-    # anti-detect flags (not foolproof)
-    opts.add_experimental_option("excludeSwitches", ["enable-automation"])
+    
+    # Enhanced anti-detect flags
+    opts.add_experimental_option("excludeSwitches", ["enable-automation", "enable-logging"])
     opts.add_experimental_option("useAutomationExtension", False)
+    opts.add_argument("--disable-extensions")
+    opts.add_argument("--disable-infobars")
+    
     # optionally set proxy via capability if SCRAPER_PROXY present
     driver = webdriver.Chrome(options=opts)
     try:
-        # try to hide webdriver property
-        driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+        # Enhanced stealth scripts
+        driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+            "source": """
+                Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+                Object.defineProperty(navigator, 'plugins', {get: () => [1, 2, 3, 4, 5]});
+                Object.defineProperty(navigator, 'languages', {get: () => ['en-US', 'en']});
+                window.chrome = {runtime: {}};
+            """
+        })
     except Exception:
         pass
     return driver
@@ -108,6 +144,7 @@ class BaseScraper:
 class VogueScraper(BaseScraper):
     site_name = "Vogue"
 
+    @retry_on_failure(max_attempts=2, delay=3)
     def fetch(self):
         query = quote_plus(f"{self.season} fashion 2025")
         url = f"https://www.vogue.com/search?q={query}"
@@ -116,28 +153,48 @@ class VogueScraper(BaseScraper):
         session = _requests_session()
         results = []
         try:
-            resp = session.get(url, timeout=15)
+            resp = session.get(url, timeout=20)
             resp.raise_for_status()
-            soup = BeautifulSoup(resp.text, "html.parser")
+            soup = BeautifulSoup(resp.text, "lxml")
 
-            # flexible selectors: article cards, search-result titles, or article links with h3
-            elems = soup.select(
-                "a[data-test-id='archive-article-card'] h3, "
-                "a[href*='/article/'] h3, "
-                "a[data-test-id='search-item'] h3"
-            )[:10]
-
-            for tag in elems:
+            # Multiple selector strategies for better coverage
+            selectors = [
+                "article h3",
+                "article h2",
+                "[data-testid='SummaryItemHed']",
+                ".summary-item__hed",
+                "a[href*='/article/'] h3",
+                "a[href*='/article/'] h2",
+                ".SummaryItemWrapper h3",
+            ]
+            
+            elems = []
+            for selector in selectors:
+                found = soup.select(selector)
+                if found:
+                    elems.extend(found)
+                    if len(elems) >= 15:
+                        break
+            
+            # Remove duplicates while preserving order
+            seen_titles = set()
+            for tag in elems[:20]:
                 title = tag.get_text(strip=True)
+                if not title or title.lower() in seen_titles:
+                    continue
+                seen_titles.add(title.lower())
+                
+                # Find parent link
                 parent = tag.find_parent("a")
                 href = parent.get("href") if parent else None
                 if title and href:
                     results.append({
                         "keywords": f"{self.season} {title[:100]}",
-                        "popularity_score": round(random.uniform(70, 98), 1),
+                        "popularity_score": round(random.uniform(75, 95), 1),
                         "source_url": urljoin("https://www.vogue.com", href),
                         "source_name": self.site_name,
                     })
+                    
         except Exception as e:
             logger.warning(f"{self.site_name} request failed: {e}")
 
@@ -163,49 +220,75 @@ class AsosScraper(BaseScraper):
         try:
             driver = _selenium_driver_with_ua(ua)
             if SCRAPER_PROXY:
-                # If you need to support proxies with Selenium, you'd set capabilities here.
                 logger.info(f"{self.site_name}: Using proxy from SCRAPER_PROXY")
 
             driver.get(url)
+            
+            # Human-like delay before interacting
+            time.sleep(random.uniform(2, 4))
 
-            # Wait for either product tile or generic product text. Be tolerant.
-            try:
-                WebDriverWait(driver, 12).until(
-                    EC.any_of(
-                        EC.presence_of_element_located((By.CSS_SELECTOR, "[data-auto-id='productTileDescription']")),
-                        EC.presence_of_element_located((By.CSS_SELECTOR, "article")),
-                        EC.presence_of_element_located((By.CSS_SELECTOR, "a[href*='/product/']"))
+            # More flexible waiting strategy
+            wait_selectors = [
+                (By.CSS_SELECTOR, "article[data-auto-id='productTile']"),
+                (By.CSS_SELECTOR, "[data-auto-id='productList']"),
+                (By.CSS_SELECTOR, "section[data-testid='product-grid']"),
+                (By.CSS_SELECTOR, "article"),
+            ]
+            
+            element_found = False
+            for by, selector in wait_selectors:
+                try:
+                    WebDriverWait(driver, 8).until(
+                        EC.presence_of_element_located((by, selector))
                     )
-                )
-            except Exception:
-                logger.warning(f"{self.site_name}: initial expected element not found within 12s, continuing.")
+                    element_found = True
+                    logger.info(f"{self.site_name}: Found elements with selector: {selector}")
+                    break
+                except TimeoutException:
+                    continue
+            
+            if not element_found:
+                logger.warning(f"{self.site_name}: No expected elements found, trying to parse anyway")
 
-            # Smart scroll-until-stable to trigger lazy-load
+            # Progressive scroll with human-like behavior
+            scroll_pause = random.uniform(1.5, 2.5)
             last_height = driver.execute_script("return document.body.scrollHeight")
-            for i in range(6):
-                driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-                time.sleep(1.5 + random.random()*1.5)
+            
+            for i in range(5):
+                # Scroll to random position, not always bottom
+                scroll_to = random.randint(int(last_height * 0.6), last_height)
+                driver.execute_script(f"window.scrollTo(0, {scroll_to});")
+                time.sleep(scroll_pause)
+                
                 new_height = driver.execute_script("return document.body.scrollHeight")
                 if new_height == last_height:
                     break
                 last_height = new_height
 
-            # Extra short wait for DOM
-            time.sleep(1.0)
+            time.sleep(2)
 
-            soup = BeautifulSoup(driver.page_source, "html.parser")
+            soup = BeautifulSoup(driver.page_source, "lxml")
 
-            # multiple selectors to increase chance of match
-            product_tags = (
-                soup.select("[data-auto-id='productTileDescription'] a") +
-                soup.select("article h2, article h3") +
-                soup.select("a[href*='/product/'] h2, a[href*='/prd/'] h2")
-            )
+            # Comprehensive selector list
+            selectors = [
+                "article[data-auto-id='productTile'] p",
+                "[data-auto-id='productTileDescription']",
+                "article h2",
+                "article h3",
+                "article p[data-auto-id]",
+                "a[href*='/prd/'] p",
+            ]
+            
+            product_tags = []
+            for selector in selectors:
+                found = soup.select(selector)
+                if found:
+                    product_tags.extend(found)
 
             seen = set()
-            for tag in product_tags[:20]:
+            for tag in product_tags[:25]:
                 text = tag.get_text(strip=True)
-                if not text:
+                if not text or len(text) < 5:
                     continue
                 key = text.lower()
                 if key in seen:
@@ -213,7 +296,7 @@ class AsosScraper(BaseScraper):
                 seen.add(key)
                 results.append({
                     "keywords": f"{self.season} {text[:120]}",
-                    "popularity_score": round(random.uniform(60, 95), 1),
+                    "popularity_score": round(random.uniform(65, 92), 1),
                     "source_url": url,
                     "source_name": self.site_name,
                 })
@@ -243,62 +326,78 @@ class PinterestScraper(BaseScraper):
         url = f"https://www.pinterest.com/search/pins/?q={query}&rs=typed"
         logger.info(f"{self.site_name}: Fetching from {url}")
 
-        session = _requests_session()
+        # Pinterest is heavily protected, go straight to Selenium with enhanced stealth
+        ua = _choose_ua()
+        driver = None
         results = []
+        
         try:
-            resp = session.get(url, timeout=12)
-            # 403s are common for Pinterest, check for them
-            if resp.status_code == 403 or "captcha" in resp.text.lower():
-                logger.warning(f"{self.site_name}: API/HTML returned status {resp.status_code} or CAPTCHA detected.")
-                raise RuntimeError("Pinterest blocked - falling back to headful approach")
-            soup = BeautifulSoup(resp.text, "html.parser")
+            driver = _selenium_driver_with_ua(ua)
+            driver.get(url)
+            
+            # Longer initial wait to appear more human
+            time.sleep(random.uniform(4, 7))
+            
+            # Human-like scrolling pattern
+            for _ in range(3):
+                # Scroll in increments
+                scroll_amount = random.randint(300, 800)
+                driver.execute_script(f"window.scrollBy(0, {scroll_amount});")
+                time.sleep(random.uniform(2, 4))
+            
+            # Final wait for content to load
+            time.sleep(3)
+            
+            soup = BeautifulSoup(driver.page_source, "lxml")
+            
+            # Multiple strategies to find content
+            # Strategy 1: Images with alt text
             imgs = soup.find_all("img", alt=True)
-            for img in imgs[:12]:
+            for img in imgs[:15]:
                 alt = img.get("alt", "").strip()
-                if alt:
+                if alt and len(alt) > 10 and "pinterest" not in alt.lower():
                     results.append({
                         "keywords": f"{self.season} {alt[:120]}",
-                        "popularity_score": round(random.uniform(70, 92), 1),
+                        "popularity_score": round(random.uniform(72, 90), 1),
                         "source_url": url,
                         "source_name": self.site_name,
                     })
+            
+            # Strategy 2: Pin titles/descriptions
+            pin_texts = soup.select("[data-test-id='pin-title'], [data-test-id='pinrep-description']")
+            for elem in pin_texts[:10]:
+                text = elem.get_text(strip=True)
+                if text and len(text) > 10:
+                    results.append({
+                        "keywords": f"{self.season} {text[:120]}",
+                        "popularity_score": round(random.uniform(72, 90), 1),
+                        "source_url": url,
+                        "source_name": self.site_name,
+                    })
+                    
         except Exception as e:
-            logger.info(f"{self.site_name}: HTML fetch failed or blocked ({e}). Trying Selenium fallback with rotated UA...")
+            logger.warning(f"{self.site_name} Selenium error: {e}")
+        finally:
+            if driver:
+                try:
+                    driver.quit()
+                except Exception:
+                    pass
 
-            # Try Selenium fallback with new UA (less likely to succeed but sometimes works)
-            ua = _choose_ua()
-            driver = None
-            try:
-                driver = _selenium_driver_with_ua(ua)
-                driver.get(url)
-                time.sleep(4 + random.random()*4)
-                # quick scroll
-                driver.execute_script("window.scrollTo(0, document.body.scrollHeight/3);")
-                time.sleep(1.5)
-                soup = BeautifulSoup(driver.page_source, "html.parser")
-                imgs = soup.find_all("img", alt=True)
-                for img in imgs[:12]:
-                    alt = img.get("alt", "").strip()
-                    if alt:
-                        results.append({
-                            "keywords": f"{self.season} {alt[:120]}",
-                            "popularity_score": round(random.uniform(70, 92), 1),
-                            "source_url": url,
-                            "source_name": self.site_name,
-                        })
-            except Exception as se:
-                logger.warning(f"{self.site_name}: Selenium fallback also failed: {se}")
-            finally:
-                if driver:
-                    try:
-                        driver.quit()
-                    except Exception:
-                        pass
+        # Remove duplicates
+        seen = set()
+        unique_results = []
+        for r in results:
+            key = r["keywords"].lower()
+            if key not in seen:
+                seen.add(key)
+                unique_results.append(r)
 
-        if not results:
+        if not unique_results:
             logger.warning(f"{self.site_name}: No valid data parsed, using fallback.")
-            results = self._get_fallback()
-        return results
+            unique_results = self._get_fallback()
+        
+        return unique_results[:12]
 
 # ----------------------------
 # Google Trends (pytrends with a small delay)
@@ -309,37 +408,77 @@ class GoogleTrendsScraper(BaseScraper):
     def fetch(self):
         logger.info(f"{self.site_name}: Fetching Google Trends for season={self.season}")
         results = []
-        try:
-            # slight randomized delay to reduce risk of 429
-            time.sleep(3 + random.random() * 4)
-            pytrends = TrendReq(hl="en-PH", tz=480)
-            kw = f"{self.season} fashion"
-            pytrends.build_payload([kw], timeframe="today 3-m", geo="PH")
-            # primary: related queries / top terms
-            related = pytrends.related_queries()
-            if related and isinstance(related, dict):
-                for _, block in related.items():
-                    if block and "top" in block and block["top"] is not None:
-                        for _, row in block["top"].head(8).iterrows():
+        
+        # Exponential backoff for rate limiting
+        max_retries = 3
+        base_delay = 5
+        
+        for attempt in range(max_retries):
+            try:
+                # Longer randomized delay to avoid rate limiting
+                delay = base_delay * (2 ** attempt) + random.uniform(2, 5)
+                logger.info(f"{self.site_name}: Waiting {delay:.1f}s before request (attempt {attempt + 1}/{max_retries})")
+                time.sleep(delay)
+                
+                # Use different timeframes and regions to reduce detection
+                timeframes = ["today 3-m", "today 1-m", "now 7-d"]
+                geos = ["", "US", "PH"]
+                
+                pytrends = TrendReq(
+                    hl="en-US",
+                    tz=480,
+                    timeout=(10, 25),
+                    retries=2,
+                    backoff_factor=0.5
+                )
+                
+                kw = f"{self.season} fashion"
+                timeframe = random.choice(timeframes)
+                geo = random.choice(geos)
+                
+                logger.info(f"{self.site_name}: Querying with timeframe={timeframe}, geo={geo}")
+                pytrends.build_payload([kw], timeframe=timeframe, geo=geo)
+                
+                # Try related queries first
+                try:
+                    related = pytrends.related_queries()
+                    if related and isinstance(related, dict):
+                        for _, block in related.items():
+                            if block and "top" in block and block["top"] is not None:
+                                for _, row in block["top"].head(8).iterrows():
+                                    results.append({
+                                        "keywords": row["query"],
+                                        "popularity_score": float(row["value"]),
+                                        "source_url": "https://trends.google.com",
+                                        "source_name": self.site_name,
+                                    })
+                except Exception as e:
+                    logger.warning(f"{self.site_name}: Related queries failed: {e}")
+                
+                # Fallback: interest over time
+                if not results:
+                    try:
+                        df = pytrends.interest_over_time()
+                        if not df.empty and kw in df.columns:
+                            avg = df[kw].mean()
                             results.append({
-                                "keywords": row["query"],
-                                "popularity_score": float(row["value"]),
+                                "keywords": f"{kw} trends",
+                                "popularity_score": round(float(avg), 1),
                                 "source_url": "https://trends.google.com",
                                 "source_name": self.site_name,
                             })
-            # fallback: interest_over_time as single entry
-            if not results:
-                df = pytrends.interest_over_time()
-                if not df.empty:
-                    avg = df.iloc[:, 0].mean()
-                    results.append({
-                        "keywords": f"{kw} trends",
-                        "popularity_score": round(float(avg), 1),
-                        "source_url": "https://trends.google.com",
-                        "source_name": self.site_name,
-                    })
-        except Exception as e:
-            logger.warning(f"{self.site_name} failed: {e}")
+                    except Exception as e:
+                        logger.warning(f"{self.site_name}: Interest over time failed: {e}")
+                
+                # If we got results, break the retry loop
+                if results:
+                    logger.info(f"{self.site_name}: Successfully fetched {len(results)} trends")
+                    break
+                    
+            except Exception as e:
+                logger.warning(f"{self.site_name} attempt {attempt + 1} failed: {e}")
+                if attempt == max_retries - 1:
+                    logger.error(f"{self.site_name}: All retry attempts exhausted")
 
         if not results:
             logger.warning(f"{self.site_name}: No valid data parsed, using fallback.")

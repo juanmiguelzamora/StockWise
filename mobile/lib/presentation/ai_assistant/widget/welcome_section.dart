@@ -65,8 +65,7 @@ class WelcomeSection extends StatelessWidget {
                     ),
                     SizedBox(height: 6),
                     Text(
-                      "Hello! I’m your intelligent assistant powered by advanced language models. "
-                      "I can provide analytics, predictions, trends, and help you optimize your inventory management.",
+                      "Hello! I can provide inventory insights, analyze trends, make predictions, and help optimize your stock management. What would you like to explore?",
                       style: TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 14,

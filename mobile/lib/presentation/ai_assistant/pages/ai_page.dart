@@ -23,8 +23,8 @@ class _AiPageState extends State<AiPage> with TickerProviderStateMixin {
   final scrollController = ScrollController();
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
-  final quickActions = [  // IMPROVED: Added inventory quick action
-    {'title': 'Check Stock', 'query': 'Current stock for gray pants'},
+  final quickActions = [
+    {'title': 'Total Inventory', 'query': 'What is the total stock?'},
     {'title': 'Seasonal Trends', 'query': 'Predict Christmas trends for clothing'},
   ];
 
