@@ -16,8 +16,8 @@ from .serializers import (
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all().order_by("-id")
     serializer_class = ProductSerializer
-    #permission_classes = [permissions.IsAuthenticated]
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
+    #permission_classes = [permissions.AllowAny]
 
     lookup_field = "sku"
 
@@ -66,8 +66,8 @@ class ProductViewSet(viewsets.ModelViewSet):
 class InventoryViewSet(viewsets.ModelViewSet):
     queryset = Inventory.objects.select_related("product").all()
     serializer_class = InventorySerializer
-    #permission_classes = [permissions.IsAuthenticated]
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
+    #permission_classes = [permissions.AllowAny]
 
     def summary(self, request):
         data = Inventory.objects.aggregate(
