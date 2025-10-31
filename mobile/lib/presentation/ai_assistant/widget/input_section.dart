@@ -3,18 +3,20 @@ import 'package:mobile/core/configs/theme/app_colors.dart';
 
 class InputSection extends StatelessWidget {
   final TextEditingController controller;
+  final FocusNode focusNode;
   final Function(String) onSend;
 
   const InputSection({
     super.key,
     required this.controller,
+    required this.focusNode,
     required this.onSend,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
       decoration: BoxDecoration(
         color: AppColors.surface,
         boxShadow: [
@@ -26,18 +28,20 @@ class InputSection extends StatelessWidget {
         ],
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(
             child: TextField(
               controller: controller,
+              focusNode: focusNode,
               style: const TextStyle(
-                color: AppColors.textPrimary, // 👈 color of the inputted text
-                fontSize: 16, // optional: adjust text size
+                color: AppColors.textPrimary,
+                fontSize: 16,
               ),
               decoration: InputDecoration(
                 hintText: 'Ask about stock, trends, or predictions...',
                 hintStyle: const TextStyle(
-                  color: AppColors.textSecondary, // 👈 optional: hint text color
+                  color: AppColors.textSecondary,
                 ),
                 border: InputBorder.none,
                 focusedBorder: OutlineInputBorder(
@@ -48,10 +52,11 @@ class InputSection extends StatelessWidget {
                   ),
                 ),
                 contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               ),
               onSubmitted: (value) => onSend(value),
               textInputAction: TextInputAction.send,
+              maxLines: 1,
             ),
           ),
           const SizedBox(width: 8),
@@ -59,7 +64,7 @@ class InputSection extends StatelessWidget {
             onPressed: () => onSend(controller.text),
             mini: true,
             backgroundColor: AppColors.primary,
-            child: const Icon(Icons.send, color: Colors.white),
+            child: const Icon(Icons.send, color: Colors.white, size: 20),
           ),
         ],
       ),

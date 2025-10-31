@@ -190,7 +190,7 @@ DJANGO_REST_PASSWORDRESET = {
     'RESET_PASSWORD_TOKEN_GENERATOR': 'django_rest_passwordreset.tokens.get_token_generator'
 }
 
-OLLAMA_API_TIMEOUT = 60
+OLLAMA_API_TIMEOUT = 120
 FUZZY_MATCH_CUTOFF = 0.3
 
 MEDIA_URL = '/media/'
@@ -208,6 +208,11 @@ LOGGING = {
         'product_app': {  # Your app name
             'handlers': ['console'],
             'level': 'DEBUG',  # NEW: Shows debug snippets
+            'propagate': True,
+        },
+        'ai_assistant': {  # AI assistant app
+            'handlers': ['console'],
+            'level': 'INFO',  # Shows info, warning, and error logs
             'propagate': True,
         },
     },
