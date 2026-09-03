@@ -1,4 +1,4 @@
-import { useState, useEffect, ChangeEvent } from "react";
+import { useState, useEffect } from "react";
 import api from "../services/api";
 import { useInventory } from "../contexts/InventoryContext";
 
@@ -64,7 +64,7 @@ export function useInventoryLogic(onStockChange?: (item: HistoryItem) => void): 
           category: item.product.category ?? null,
           quantity: item.product.inventory?.total_stock ?? item.total_stock ?? 0,
           image: item.product.image_url
-            ? `${import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"}/media/${item.product.image_url}`
+            ? `${import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000"}/media/${item.product.image_url}`
             : null,
           stock_status: item.product.inventory?.stock_status ?? "unknown",
         }));
@@ -118,6 +118,7 @@ export function useInventoryLogic(onStockChange?: (item: HistoryItem) => void): 
     try {
       await api.patch(`/products/${item.sku}/`, { quantity: newQuantity });
       updateItem(product_id, newQuantity);
+      window.dispatchEvent(new CustomEvent("stockwise:history-refresh"));
       alert(`✅ Quantity for ${item.product_name} updated successfully!`);
     } catch (err) {
       console.error("❌ Failed to update stock:", err);
@@ -135,6 +136,7 @@ export function useInventoryLogic(onStockChange?: (item: HistoryItem) => void): 
       updateItem(product_id, newQuantity, +1);
       setInputQuantities((prev) => ({ ...prev, [product_id]: newQuantity }));
       localStorage.setItem("refreshHistory", Date.now().toString());
+      window.dispatchEvent(new CustomEvent("stockwise:history-refresh"));
     } catch (err) {
       console.error("❌ Failed to increase stock:", err);
     }
@@ -149,6 +151,7 @@ export function useInventoryLogic(onStockChange?: (item: HistoryItem) => void): 
       updateItem(product_id, newQuantity, -1);
       setInputQuantities((prev) => ({ ...prev, [product_id]: newQuantity }));
       localStorage.setItem("refreshHistory", Date.now().toString());
+      window.dispatchEvent(new CustomEvent("stockwise:history-refresh"));
     } catch (err) {
       console.error("❌ Failed to decrease stock:", err);
     }

@@ -42,12 +42,13 @@ export function useDashboardLogic() {
   const [filtered, setFiltered] = useState<HistoryItem[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [productsLoaded, setProductsLoaded] = useState(false);
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState("");
 
   const fallbackHistory = useMemo<HistoryItem[]>(() => {
     if (!products || products.length === 0) return [];
-    const base = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8000").replace(/\/$/, "");
+    const base = (import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
     const list = products.map((p) => {
       const d = p.updated_at || new Date().toISOString();
       let image = "/placeholder.png";
@@ -82,11 +83,17 @@ export function useDashboardLogic() {
       setLoading(true);
       try {
         const { data } = await api.get<BackendProduct[]>("/products/?ordering=-updated_at");
-        setProducts(data || []);
+        const productList = Array.isArray(data)
+          ? data
+          : Array.isArray((data as unknown as { results?: BackendProduct[] }).results)
+            ? (data as unknown as { results: BackendProduct[] }).results
+            : [];
+        setProducts(productList);
       } catch (err) {
         console.error(err);
         setError("Failed to load products");
       } finally {
+        setProductsLoaded(true);
         setLoading(false);
       }
     };
@@ -106,7 +113,7 @@ export function useDashboardLogic() {
         const mappedHistory: HistoryItem[] = rawHistory.map((item) => {
           const timestamp = item.timestamp || item.updated_at || item.date || new Date().toISOString();
 
-          const base = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8000").replace(/\/$/, "");
+          const base = (import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
           const rawImg: string | undefined = item.image || item.image_url;
           let image = "/placeholder.png";
           if (typeof rawImg === "string" && rawImg.trim()) {
@@ -120,15 +127,16 @@ export function useDashboardLogic() {
             }
           }
 
-          // derive change value from multiple possible fields
+          // Sales history stores units_sold as a positive analytics value;
+          // inventory movement displays sales as a negative change.
           const rawChange =
             item.change ??
-            item.quantity ??
-            item.qty ??
-            item.delta ??
-            item.stock_change ??
-            item.units_sold ??
-            0;
+            (item.units_sold != null ? -Math.abs(Number(item.units_sold)) :
+              item.quantity ??
+              item.qty ??
+              item.delta ??
+              item.stock_change ??
+              0);
           const numChange = typeof rawChange === "string" ? Number(rawChange) : Number(rawChange);
 
           return {
@@ -154,6 +162,14 @@ export function useDashboardLogic() {
       }
     };
     fetchHistory();
+    const refreshHistory = () => fetchHistory();
+    window.addEventListener("stockwise:history-refresh", refreshHistory);
+    window.addEventListener("focus", refreshHistory);
+
+    return () => {
+      window.removeEventListener("stockwise:history-refresh", refreshHistory);
+      window.removeEventListener("focus", refreshHistory);
+    };
   }, []);
 
   // ================== Computed Values ==================
@@ -224,6 +240,7 @@ export function useDashboardLogic() {
     query,
     setQuery,
     loading,
+    productsLoaded,
     searching,
     error,
     totalStock,

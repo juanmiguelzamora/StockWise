@@ -4,18 +4,10 @@ import Navbar from "../layout/navbar";
 import RolePopup from "../components/ui/rolepopup";
 import DeleteUserPopup from "../components/ui/deletepopup";
 import SearchBar from "../components/ui/searchbar";
+import UsersTable from "../components/users/UsersTable";
+import type { User } from "../types/user";
 
 // 🔹 Define User type (updated to match backend model: added first_name, last_name; assuming backend serializer includes is_superuser/is_staff for role checks)
-interface User {
-  id: number;
-  email: string;
-  first_name: string;
-  last_name: string;
-  is_superuser: boolean;
-  is_staff: boolean;
-  is_active: boolean;
-}
-
 // 🔹 API response for paginated users
 interface PaginatedResponse<T> {
   results?: T[];
@@ -160,7 +152,7 @@ const UsersPage: React.FC = () => {
     if (!editingUser) return;
 
     try {
-      await api.patch(`users/${editingUser.id}/`, updatedUser);  // Use editingUser.id for consistency; endpoint matches detail
+      await api.patch(`users/${id}/`, updatedUser);  // Use id from parameter
       fetchUsers();  // Refresh list
       setEditingUser(null);
     } catch (err: any) {
@@ -248,73 +240,12 @@ const UsersPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Table (updated: added Name column; adjusted widths for table-fixed) */}
-          <div className="bg-white rounded-xl shadow-md overflow-hidden">
-            <table className="w-full text-left table-fixed">
-              <thead>
-                <tr className="bg-[#5283FF] text-white">
-                  <th className="w-1/3 px-6 py-3">Name</th>
-                  <th className="w-1/3 px-6 py-3">Email</th>
-                  <th className="w-1/6 px-6 py-3 text-center">User Role</th>
-                  <th className="w-1/6 px-6 py-3 text-center">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.map((u, idx) => (
-                  <tr
-                    key={u.id}
-                    className={`${idx % 2 === 0 ? "bg-white" : "bg-[#F9FBFF]"} hover:bg-gray-100 transition`}
-                  >
-                    <td className="px-6 py-3 text-gray-800">
-                      {u.first_name} {u.last_name}
-                    </td>
-                    <td className="px-6 py-3 text-gray-800 truncate">{u.email}</td>
-                    <td className="px-6 py-3 text-center">
-                      {u.is_superuser ? (
-                        <span className="font-semibold text-gray-900">Admin</span>
-                      ) : u.is_staff ? (
-                        <span className="text-gray-800">Staff</span>
-                      ) : (
-                        <span className="text-gray-500">User</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-3 flex gap-4 items-center justify-center">
-                      <button
-                        onClick={() => startEdit(u)}
-                        disabled={!currentUser?.is_superuser}
-                        className={`w-5 h-5 ${
-                          !currentUser?.is_superuser ? "opacity-30 cursor-not-allowed" : "hover:opacity-80"
-                        }`}
-                        title="Edit Role"
-                      >
-                        <img
-                          src="/iconedit.png"
-                          alt="Edit"
-                          className="w-full h-full object-contain"
-                          draggable={false}
-                        />
-                      </button>
-                      <button
-                        onClick={() => requestDeleteUser(u)}
-                        disabled={!currentUser?.is_superuser}
-                        className={`w-5 h-5 ${
-                          !currentUser?.is_superuser ? "opacity-30 cursor-not-allowed" : "hover:opacity-80"
-                        }`}
-                        title="Delete User"
-                      >
-                        <img
-                          src="/icondelete.png"
-                          alt="Delete"
-                          className="w-full h-full object-contain"
-                          draggable={false}
-                        />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <UsersTable
+            users={filteredUsers}
+            currentUser={currentUser}
+            onEdit={startEdit}
+            onDelete={requestDeleteUser}
+          />
         </div>
       </div>
 

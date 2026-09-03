@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
 from django.conf import settings
-from .models import Category, Product, Supplier, Inventory, SalesHistory
+from .models import Category, Product, Supplier, Inventory, SalesHistory, StockMovement
 
 
 @admin.register(Category)
@@ -72,3 +72,10 @@ class SalesHistoryAdmin(admin.ModelAdmin):
     search_fields = ("product__name", "date")
     list_filter = ("date", "product__category")
     date_hierarchy = "date"  # Filter by date range
+
+
+@admin.register(StockMovement)
+class StockMovementAdmin(admin.ModelAdmin):
+    list_display = ("id", "product", "change", "quantity_after", "created_at")
+    search_fields = ("product__name", "product__sku")
+    list_filter = ("created_at",)

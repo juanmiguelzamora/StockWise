@@ -9,5 +9,15 @@ abstract class AuthRepository {
   Future<Either> forgotPassword(String email);
   Future<bool> isLoggedIn();
   Future<Either> getUser();
+  Future<Either> updateProfile({
+    required String firstName,
+    required String lastName,
+    required String email,
+    String? profilePicturePath,
+  });
+  Future<Either> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  });
   Future<Either> logout();
 }

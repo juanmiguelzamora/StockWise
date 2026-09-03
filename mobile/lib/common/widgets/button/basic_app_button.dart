@@ -6,11 +6,13 @@ class BasicAppButton extends StatelessWidget {
   final Widget ? content;
   final double ? height;
   final double ? width;
+  final Color textColor;
   const BasicAppButton({
     required this.onPressed,
     this.title = '',
     this.height,
     this.width,
+    this.textColor = Colors.white,
     this.content,
     super.key
   });
@@ -27,8 +29,8 @@ class BasicAppButton extends StatelessWidget {
       ),
       child: content ?? Text(
         title,
-        style: const TextStyle(
-          color: Colors.white,
+        style: TextStyle(
+          color: textColor,
           fontWeight: FontWeight.w400
         ),
       )

@@ -1,6 +1,4 @@
 // components/ui/RolePopup.tsx
-import React from "react";
-
 interface RolePopupProps {
   role: string;
   setRole: (role: string) => void;

@@ -1,4 +1,3 @@
-// cropImage.ts
 export interface PixelCrop {
   x: number;
   y: number;

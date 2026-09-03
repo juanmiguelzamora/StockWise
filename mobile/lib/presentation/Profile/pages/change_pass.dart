@@ -3,6 +3,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mobile/common/widgets/appbar/app_bar.dart';
 import 'package:mobile/common/widgets/button/basic_app_button.dart';
 import 'package:mobile/core/configs/assets/app_vectors.dart';
+import 'package:mobile/core/configs/theme/app_colors.dart';
+import 'package:mobile/domain/auth/repository/auth.dart';
+import 'package:mobile/service_locator.dart';
 
 class ChangePasswordPage extends StatefulWidget {
   const ChangePasswordPage({super.key});
@@ -23,7 +26,10 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const BasicAppbar(hideBack: false),
+      appBar: const BasicAppbar(
+        hideBack: false,
+        title: Text('Change Password', style: TextStyle(color: Colors.black)),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
         child: Column(
@@ -42,6 +48,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
+                color: Colors.black,
               ),
               textAlign: TextAlign.center,
             ),
@@ -77,7 +84,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
             // ✅ Confirm Button
             BasicAppButton(
               title: "Confirm Change",
-              onPressed: () {
+              textColor: Colors.white,
+              onPressed: () async {
                 final oldPass = _oldPasswordCon.text.trim();
                 final newPass = _newPasswordCon.text.trim();
                 final confirmPass = _confirmPasswordCon.text.trim();
@@ -85,7 +93,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                 if (oldPass.isEmpty || newPass.isEmpty || confirmPass.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text("Please fill in all fields"),
+                      content: Text("Please fill in all fields", style: TextStyle(color: Colors.black)),
                       behavior: SnackBarBehavior.floating,
                     ),
                   );
@@ -95,19 +103,25 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                 if (newPass != confirmPass) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text("New passwords do not match"),
+                      content: Text("New passwords do not match", style: TextStyle(color: Colors.black)),
                       behavior: SnackBarBehavior.floating,
                     ),
                   );
                   return;
                 }
 
-                // TODO: Implement change password logic
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Password changed successfully"),
-                    behavior: SnackBarBehavior.floating,
+                final result = await sl<AuthRepository>().changePassword(
+                  oldPassword: oldPass,
+                  newPassword: newPass,
+                );
+                if (!context.mounted) return;
+                result.fold(
+                  (error) => ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed: $error', style: const TextStyle(color: Colors.black))),
                   ),
+                  (_) {
+                    Navigator.pop(context);
+                  },
                 );
               },
             ),
@@ -127,15 +141,24 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     return TextField(
       controller: controller,
       obscureText: obscureText,
+      style: const TextStyle(color: Colors.black),
       decoration: InputDecoration(
         labelText: label,
+        labelStyle: const TextStyle(color: AppColors.primary),
+        floatingLabelStyle: const TextStyle(color: AppColors.primary),
         suffixIcon: IconButton(
           icon: Icon(
             obscureText ? Icons.visibility_off : Icons.visibility,
+            color: AppColors.primary,
           ),
           onPressed: onToggle,
         ),
-        border: OutlineInputBorder(
+        enabledBorder: OutlineInputBorder(
+          borderSide: const BorderSide(color: AppColors.primary),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: const BorderSide(color: AppColors.primary, width: 2),
           borderRadius: BorderRadius.circular(8),
         ),
         contentPadding: const EdgeInsets.symmetric(

@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:async';
+import 'dart:io';
 import 'package:dartz/dartz.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -13,6 +15,16 @@ abstract class AuthApiService {
   Future<Either> forgotPassword(String email);
   Future<bool> isLoggedIn();
   Future<Either> getUser();
+  Future<Either> updateProfile({
+    required String firstName,
+    required String lastName,
+    required String email,
+    String? profilePicturePath,
+  });
+  Future<Either> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  });
   Future<Either> logout();
   Future<Either> refreshToken();
 }
@@ -122,6 +134,135 @@ class AuthApiServiceImpl extends AuthApiService {
       }
     } catch (e) {
       return Left(e.toString());
+    }
+  }
+
+  @override
+  Future<Either> updateProfile({
+    required String firstName,
+    required String lastName,
+    required String email,
+    String? profilePicturePath,
+  }) async {
+    try {
+      if (profilePicturePath == null) {
+        final response = await http.patch(
+          Uri.parse('${baseUrl}user/'),
+          headers: await _getHeaders(withAuth: true),
+          body: json.encode({
+            'first_name': firstName,
+            'last_name': lastName,
+            'email': email,
+          }),
+        ).timeout(const Duration(seconds: 20));
+        if (response.statusCode == 200) {
+          return Right(json.decode(response.body));
+        }
+        return Left(_profileUpdateError(response));
+      }
+
+      final request = http.MultipartRequest('PATCH', Uri.parse('${baseUrl}user/'));
+      final headers = await _getHeaders(withAuth: true);
+      headers.remove('Content-Type');
+      request.headers.addAll(headers);
+      request.fields.addAll({
+        'first_name': firstName,
+        'last_name': lastName,
+        'email': email,
+      });
+      request.files.add(await http.MultipartFile.fromPath(
+        'profile_picture',
+        profilePicturePath,
+      ));
+      final streamedResponse = await request.send().timeout(
+        const Duration(seconds: 20),
+      );
+      final response = await http.Response.fromStream(streamedResponse);
+      if (response.statusCode == 200) {
+        return Right(json.decode(response.body));
+      }
+      return Left(_profileUpdateError(response));
+    } on TimeoutException {
+      return const Left('The request timed out. Please check your connection and try again.');
+    } on SocketException {
+      return const Left('Unable to connect to StockWise. Please check your internet connection.');
+    } on http.ClientException {
+      return const Left('We could not reach StockWise right now. Please try again shortly.');
+    } catch (_) {
+      return const Left('Something went wrong while updating your profile. Please try again.');
+    }
+  }
+
+  String _profileUpdateError(http.Response response) {
+      try {
+        final error = json.decode(response.body);
+        if (error is Map<String, dynamic>) {
+          if (error.containsKey('detail')) {
+            final detail = error['detail'].toString().toLowerCase();
+            if (detail.contains('authentication') || detail.contains('token')) {
+              return 'Your session has expired. Please sign in again.';
+            }
+            return error['detail'].toString();
+          }
+          if (error.containsKey('email')) {
+            return 'This email address is already in use.';
+          }
+          if (error.containsKey('first_name') || error.containsKey('last_name')) {
+            return 'Please check your name and try again.';
+          }
+          if (response.statusCode >= 500) {
+            return 'StockWise is temporarily unavailable. Please try again later.';
+          }
+        }
+      } catch (_) {
+        return 'We could not update your profile. Please try again.';
+      }
+      if (response.statusCode == 401 || response.statusCode == 403) {
+        return 'Your session has expired. Please sign in again.';
+      }
+      if (response.statusCode >= 500) {
+        return 'StockWise is temporarily unavailable. Please try again later.';
+      }
+      return 'We could not update your profile. Please try again.';
+  }
+
+  @override
+  Future<Either> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${baseUrl}users/change-password/'),
+        headers: await _getHeaders(withAuth: true),
+        body: json.encode({
+          'old_password': oldPassword,
+          'new_password': newPassword,
+        }),
+      ).timeout(const Duration(seconds: 20));
+      if (response.statusCode == 200) {
+        return Right('Password updated successfully');
+      }
+      if (response.statusCode == 400) {
+        final error = json.decode(response.body);
+        final detail = error['detail']?.toString().toLowerCase() ?? '';
+        if (detail.contains('old password')) {
+          return const Left('The current password is incorrect.');
+        }
+        return const Left('Your new password does not meet the requirements.');
+      }
+      if (response.statusCode == 401 || response.statusCode == 403) {
+        return const Left('Your session has expired. Please sign in again.');
+      }
+      return const Left('We could not change your password. Please try again.');
+    } on TimeoutException {
+      return const Left('The request timed out. Please check your connection and try again.');
+    } on SocketException {
+      return const Left('Unable to connect to StockWise. Please check your internet connection.');
+    } on http.ClientException {
+      return const Left('We could not reach StockWise right now. Please try again shortly.');
+    } catch (_) {
+      return const Left('Something went wrong while changing your password. Please try again.');
     }
   }
 

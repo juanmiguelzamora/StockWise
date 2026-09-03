@@ -1,5 +1,5 @@
 // src/pages/Profile.tsx
-import { useEffect, useState, ChangeEvent } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import Navbar from "../layout/navbar";
 import api from "../services/api";
 import Cropper from "react-easy-crop";
@@ -9,6 +9,8 @@ import getCroppedImg from "./cropImage";
 interface User {
   id: number; // ✅ Add this
   email: string;
+  first_name?: string;
+  last_name?: string;
   profile_picture?: string | null;
   is_superuser?: boolean;
   is_staff?: boolean;
@@ -35,7 +37,7 @@ export default function Profile() {
   const [showEdit, setShowEdit] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
-  const [formData, setFormData] = useState<{ email: string }>({ email: "" });
+  const [formData, setFormData] = useState<{ email: string; first_name: string; last_name: string }>({ email: "", first_name: "", last_name: "" });
   const [profilePicture, setProfilePicture] = useState<Blob | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
 
@@ -66,7 +68,11 @@ export default function Profile() {
     try {
       const res = await api.get<User>("user/"); // ✅ fixed endpoint
       setUser(res.data);
-      setFormData({ email: res.data.email });
+      setFormData({ 
+        email: res.data.email,
+        first_name: res.data.first_name || "",
+        last_name: res.data.last_name || ""
+      });
       setPreview(res.data.profile_picture || null);
     } catch (err: any) {
       alert(err.response?.data?.detail || "Failed to load profile");
@@ -90,6 +96,8 @@ export default function Profile() {
     setSaving(true);
     const form = new FormData();
     form.append("email", formData.email);
+    form.append("first_name", formData.first_name);
+    form.append("last_name", formData.last_name);
 
     if (profilePicture) {
       form.append("profile_picture", profilePicture, "profile.jpg");
@@ -164,7 +172,9 @@ export default function Profile() {
             )}
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-gray-800">{user?.email}</h2>
+            <h2 className="text-xl font-semibold text-gray-800">
+              {user?.first_name ? `${user.first_name} ${user.last_name}` : user?.email}
+            </h2>
             <p className="text-gray-500">
               {user?.is_superuser ? "Admin" : user?.is_staff ? "Staff" : "User"}
             </p>
@@ -193,6 +203,14 @@ export default function Profile() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-gray-700">
             <div>
+              <p className="text-sm text-gray-500">First Name</p>
+              <p className="font-medium">{user?.first_name || "N/A"}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Last Name</p>
+              <p className="font-medium">{user?.last_name || "N/A"}</p>
+            </div>
+            <div>
               <p className="text-sm text-gray-500">Email</p>
               <p className="font-medium">{user?.email}</p>
             </div>
@@ -211,6 +229,28 @@ export default function Profile() {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40">
           <div className="bg-white rounded-xl p-6 w-96 shadow">
             <h2 className="text-lg font-semibold mb-4">Edit Profile</h2>
+
+            {/* First Name */}
+            <label className="block mb-3">
+              <span className="text-sm text-gray-500">First Name</span>
+              <input
+                type="text"
+                value={formData.first_name}
+                onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                className="mt-1 block w-full border rounded-lg px-3 py-2"
+              />
+            </label>
+
+            {/* Last Name */}
+            <label className="block mb-3">
+              <span className="text-sm text-gray-500">Last Name</span>
+              <input
+                type="text"
+                value={formData.last_name}
+                onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                className="mt-1 block w-full border rounded-lg px-3 py-2"
+              />
+            </label>
 
             {/* Email */}
             <label className="block mb-3">

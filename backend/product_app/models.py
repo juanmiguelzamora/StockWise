@@ -89,6 +89,20 @@ class SalesHistory(models.Model):
         return f"{self.product.name} - {self.date}: {self.units_sold} sold"
 
 
+class StockMovement(models.Model):
+    """Immutable record of each inventory quantity change."""
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="stock_movements")
+    change = models.IntegerField()
+    quantity_after = models.PositiveIntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+
+    def __str__(self):
+        return f"{self.product.name}: {self.change:+d}"
+
+
 class Inventory(models.Model):
     """
     Manages detailed inventory metrics for each product.

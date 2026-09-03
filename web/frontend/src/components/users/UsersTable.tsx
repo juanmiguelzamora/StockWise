@@ -1,15 +1,10 @@
-export interface UserRowData {
-  id: number;
-  email: string;
-  is_superuser: boolean;
-  is_staff: boolean;
-}
+import type { User } from "../../types/user";
 
 type Props = {
-  users: UserRowData[];
-  currentUser: UserRowData | null;
-  onEdit: (user: UserRowData) => void;
-  onDelete: (user: UserRowData) => void;
+  users: User[];
+  currentUser: User | null;
+  onEdit: (user: User) => void;
+  onDelete: (user: User) => void;
 };
 
 export default function UsersTable({ users, currentUser, onEdit, onDelete }: Props) {
@@ -18,14 +13,16 @@ export default function UsersTable({ users, currentUser, onEdit, onDelete }: Pro
       <table className="w-full text-left table-fixed">
         <thead>
           <tr className="bg-[#5283FF] text-white">
-            <th className="px-6 py-3 ">Email</th>
-            <th className="px-6 py-3 text-center ">User Role</th>
-            <th className="px-6 py-3 text-center">Action</th>
+            <th className="w-1/3 px-6 py-3">Name</th>
+            <th className="w-1/3 px-6 py-3">Email</th>
+            <th className="w-1/6 px-6 py-3 text-center">User Role</th>
+            <th className="w-1/6 px-6 py-3 text-center">Action</th>
           </tr>
         </thead>
         <tbody>
           {users.map((u, idx) => (
             <tr key={u.id} className={`${idx % 2 === 0 ? "bg-white" : "bg-[#F9FBFF]"} hover:bg-gray-100 transition`}>
+              <td className="px-6 py-3 text-gray-800">{u.first_name} {u.last_name}</td>
               <td className="px-6 py-3 text-gray-800 truncate">{u.email}</td>
               <td className="px-6 py-3 text-center">
                 {u.is_superuser ? (

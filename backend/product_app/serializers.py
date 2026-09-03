@@ -1,5 +1,7 @@
 from rest_framework import serializers
-from .models import Product, Inventory, SalesHistory
+from django.db import transaction
+from django.utils import timezone
+from .models import Product, Inventory, SalesHistory, StockMovement
 
 
 class InventoryMiniSerializer(serializers.ModelSerializer):
@@ -51,16 +53,32 @@ class ProductQuantityUpdateSerializer(serializers.Serializer):
         validated_data = {"quantity": new_quantity}
         """
         new_quantity = validated_data["quantity"]
-        inventory, _ = Inventory.objects.get_or_create(product=instance)
-        old_quantity = inventory.total_stock or 0
+        with transaction.atomic():
+            inventory, _ = Inventory.objects.select_for_update().get_or_create(product=instance)
+            old_quantity = inventory.total_stock or 0
+            change = new_quantity - old_quantity
 
-        if new_quantity > old_quantity:
-            inventory.stock_in += (new_quantity - old_quantity)
-        elif new_quantity < old_quantity:
-            inventory.stock_out += (old_quantity - new_quantity)
+            if change > 0:
+                inventory.stock_in += change
+            elif change < 0:
+                units_sold = abs(change)
+                inventory.stock_out += units_sold
+                history, _ = SalesHistory.objects.get_or_create(
+                    product=instance,
+                    date=timezone.now().date(),
+                    defaults={"units_sold": 0},
+                )
+                history.units_sold += units_sold
+                history.save(update_fields=["units_sold"])
 
-        inventory.total_stock = new_quantity
-        inventory.save()
+            inventory.total_stock = new_quantity
+            inventory.save()
+            if change:
+                StockMovement.objects.create(
+                    product=instance,
+                    change=change,
+                    quantity_after=new_quantity,
+                )
 
         # Refresh so inline inventory is updated
         instance.refresh_from_db()
@@ -92,7 +110,22 @@ class SalesHistorySerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source="product.name", read_only=True)
     sku = serializers.CharField(source="product.sku", read_only=True)
     image = serializers.CharField(source="product.image_url", read_only=True)
+    change = serializers.SerializerMethodField()
+
+    def get_change(self, obj):
+        return -obj.units_sold
 
     class Meta:
         model = SalesHistory
-        fields = ["id", "product_name", "sku", "image", "units_sold", "date"]
+        fields = ["id", "product_name", "sku", "image", "units_sold", "change", "date"]
+
+
+class StockMovementSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source="product.name", read_only=True)
+    sku = serializers.CharField(source="product.sku", read_only=True)
+    image = serializers.CharField(source="product.image_url", read_only=True)
+    date = serializers.DateTimeField(source="created_at", read_only=True)
+
+    class Meta:
+        model = StockMovement
+        fields = ["id", "product_name", "sku", "image", "change", "quantity_after", "date"]

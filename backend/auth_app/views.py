@@ -1,5 +1,6 @@
 from rest_framework import generics, status, permissions
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.permissions import AllowAny
 from .serializers import RegisterSerializer, UserSerializer
@@ -14,6 +15,7 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 from django.conf import settings
 from rest_framework.permissions import IsAdminUser
+from django.contrib.auth import update_session_auth_hash
 
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
@@ -33,13 +35,34 @@ class RegisterView(generics.CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UserView(generics.RetrieveAPIView):
-    #permission_classes = [IsAuthenticated]
-    permission_classes = [AllowAny]
+class UserView(generics.RetrieveUpdateAPIView):
+    permission_classes = [IsAuthenticated]
     serializer_class = UserSerializer
+    queryset = User.objects.all()
 
     def get_object(self):
         return self.request.user
+
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        old_password = request.data.get("old_password")
+        new_password = request.data.get("new_password")
+
+        if not user.check_password(old_password):
+            return Response({"detail": "Old password is not correct."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            validate_password(new_password, user)
+        except ValidationError as e:
+            return Response({"detail": list(e.messages)[0]}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(new_password)
+        user.save()
+        update_session_auth_hash(request, user)
+        return Response({"detail": "Password updated successfully."}, status=status.HTTP_200_OK)
 
 class UserListView(generics.ListAPIView):
     queryset = User.objects.all()

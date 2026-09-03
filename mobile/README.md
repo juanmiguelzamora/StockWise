@@ -1,473 +1,295 @@
-# StockWise Mobile - Flutter Application
+# StockWise Mobile
 
-A cross-platform mobile inventory management app built with Flutter following **Clean Architecture** principles.
+StockWise Mobile is a Flutter client for inventory management, product tracking,
+market trends, barcode scanning, and AI-assisted inventory workflows.
 
+The application uses Clean Architecture with Provider and BLoC for state
+management. It communicates with the StockWise Django REST API using JWT
+authentication.
 
-This project implements Clean Architecture with proper separation of concerns across Domain, Data, and Presentation layers.
+## Features
 
----
+- Email registration and JWT login
+- Password reset and password change
+- Profile editing with profile-picture upload
+- Home dashboard with stock overview and recent history
+- Product browsing and inventory status tracking
+- Stock quantity updates
+- Inventory history with product images
+- Barcode and QR scanning for product lookup
+- Market trends, predictions, and scraper actions
+- AI assistant for inventory questions
+- Secure access-token and refresh-token storage
+- Android, iOS, web, Windows, macOS, and Linux project targets
 
-## 📁 Project Structure
+## Technology
 
-```
-lib/
-├── core/                  # Core utilities & abstractions
-├── common/                # Shared UI components & utilities
-├── domain/                # Business logic layer (pure Dart)
-├── data/                  # Data layer (API, models, repositories)
-├── presentation/          # UI layer (pages, widgets, state)
-├── main.dart              # App entry point
-└── service_locator.dart   # Dependency injection setup
-```
+- Flutter 3.47.0
+- Dart 3.13.0
+- Provider and flutter_bloc
+- GetIt dependency injection
+- HTTP REST client
+- dartz Either results
+- flutter_secure_storage for JWT storage
+- mobile_scanner for barcode and QR scanning
+- image_picker for profile pictures
+- fl_chart for trend visualizations
 
----
+## Requirements
 
-## 📦 Layer Breakdown
+- Flutter SDK 3.47.0 or compatible stable release
+- Dart SDK compatible with `pubspec.yaml`
+- Android Studio and Android SDK for Android development
+- Xcode for iOS development on macOS
+- Visual Studio with Desktop development with C++ for Windows desktop builds
+- A running StockWise backend for authenticated and data-driven features
 
-### 🎯 **`core/`** - Core Layer
-**Purpose:** Fundamental building blocks used across all layers
+Check the local setup with:
 
-```
-core/
-├── configs/              # App configurations
-│   ├── theme/           # App theme & styling
-│   ├── routes/          # Navigation routes
-│   └── assets/          # Asset paths
-├── error/               # Error handling abstractions
-└── usecase/             # Base UseCase interface
-    └── usecase.dart     # Abstract UseCase<T, Params>
-```
-
-**Key Concepts:**
-- **UseCase Pattern:** All business operations extend `UseCase<T, Params>`
-- **Configuration:** Centralized app settings
-- **Error Handling:** Custom failure classes
-
----
-
-### 🧠 **`domain/`** - Domain Layer (Business Logic)
-**Purpose:** Pure business logic, independent of frameworks and UI
-
-```
-domain/
-├── auth/
-│   ├── entity/          # User entity (pure Dart)
-│   ├── repository/      # Auth repository interface
-│   └── usecases/        # Business operations
-│       ├── signup.dart
-│       ├── signin.dart
-│       ├── get_user.dart
-│       ├── is_logged_in.dart
-│       ├── is_logged_out.dart
-│       └── send_password_reset_email.dart
-├── product/
-│   ├── entity/          # Product entity
-│   ├── repository/      # Product repository interface
-│   └── usecases/
-│       ├── get_product_usecase.dart
-│       ├── get_product_by_sku.dart
-│       └── update_product_quantity_usecase.dart
-├── inventory/
-│   ├── entity/          # Inventory entities
-│   ├── repository/      # Inventory repository interface
-│   └── usecases/
-│       ├── get_inventory.dart
-│       ├── get_stock_status.dart
-│       └── get_inventory_summary.dart
-├── trends/
-│   ├── entity/          # Trend entities
-│   ├── repository/      # Trends repository interface
-│   └── usecases/
-│       ├── get_trends.dart
-│       ├── get_predictions.dart
-│       └── run_scraper.dart
-├── ai_assistant/
-│   ├── entity/          # AI message entities
-│   └── repository/      # AI repository interface
-└── navigation/          # Navigation domain logic
-```
-
-**Key Principles:**
-- ✅ **Framework Independent:** No Flutter dependencies
-- ✅ **Single Responsibility:** Each use case does one thing
-- ✅ **Dependency Inversion:** Depends on abstractions (interfaces)
-- ✅ **Testable:** Pure Dart, easy to unit test
-
-**Example Use Case:**
-```dart
-class SignupUseCase implements UseCase<Either, UserCreationReq> {
-  @override
-  Future<Either> call({UserCreationReq? params}) async {
-    return await sl<AuthRepository>().signup(params!);
-  }
-}
-```
-
----
-
-### 💾 **`data/`** - Data Layer
-**Purpose:** Implements domain contracts, handles API calls and data persistence
-
-```
-data/
-├── auth/
-│   ├── models/          # Data models (JSON serialization)
-│   │   ├── user.dart
-│   │   ├── user_creation_req.dart
-│   │   └── user_signin_req.dart
-│   ├── source/          # Data sources (API clients)
-│   │   └── auth_api_service.dart
-│   └── repository/      # Repository implementations
-│       └── auth_repository_impl.dart
-├── product/
-│   ├── models/
-│   ├── source/
-│   │   └── product_remote_datasource.dart
-│   └── repository/
-│       └── product_repository_impl.dart
-├── inventory/
-│   ├── models/
-│   ├── datasources/
-│   │   └── inventory_remote_datasource.dart
-│   └── repositories/
-│       └── inventory_repository_impl.dart
-├── trends/
-│   ├── models/
-│   ├── datasource/
-│   │   └── trends_remote_datasource.dart
-│   └── repositories/
-│       └── trends_repository_impl.dart
-└── ai_assistant/
-    ├── models/
-    ├── source/
-    │   └── ai_remote_datasource.dart
-    └── repository/
-        └── ai_repository_impl.dart
-```
-
-**Key Responsibilities:**
-- ✅ **API Communication:** HTTP requests to backend
-- ✅ **Data Transformation:** JSON ↔ Models ↔ Entities
-- ✅ **Repository Implementation:** Concrete implementations of domain interfaces
-- ✅ **Error Handling:** Network errors, parsing errors
-
-**Data Flow:**
-```
-API → DataSource → Model → Repository → Entity → UseCase
-```
-
----
-
-### 🎨 **`presentation/`** - Presentation Layer (UI)
-**Purpose:** User interface, state management, and user interactions
-
-```
-presentation/
-├── auth/
-│   ├── pages/           # Login, Signup, Password Reset screens
-│   ├── bloc/            # State management (if using BLoC)
-│   └── widgets/         # Auth-specific widgets
-├── home/
-│   └── pages/           # Home dashboard
-├── product/
-│   ├── pages/           # Product list, details, edit
-│   ├── provider/        # Product state provider
-│   └── widgets/         # Product widgets
-├── inventory/
-│   ├── pages/           # Inventory screens
-│   ├── provider/        # Inventory state provider
-│   └── widgets/         # Inventory widgets
-├── trends/
-│   ├── pages/           # Trends & predictions
-│   ├── provider/        # Trends state provider
-│   └── widgets/         # Trend charts, graphs
-├── ai_assistant/
-│   └── pages/           # AI chat interface
-├── Profile/
-│   └── pages/           # User profile
-├── qr_scanner/
-│   └── pages/           # QR code scanner
-├── splash/
-│   └── pages/           # Splash screen
-├── bottom_nav/
-│   └── pages/           # Bottom navigation
-└── mappers/
-    └── user_presentation.dart  # Domain → Presentation mappers
-```
-
-**State Management:**
-- **Provider Pattern:** Used for state management
-- **Separation:** UI logic separated from business logic
-- **Reactivity:** UI updates automatically on state changes
-
-**Example Provider:**
-```dart
-class ProductProvider extends ChangeNotifier {
-  final GetProductsUseCase getProductsUseCase;
-  final UpdateProductQuantityUseCase updateQuantityUseCase;
-  
-  // State management logic
-}
-```
-
----
-
-### 🔧 **`common/`** - Shared Components
-**Purpose:** Reusable UI components and utilities across features
-
-```
-common/
-├── bloc/                # Shared BLoC/state management
-├── helper/              # Helper functions
-└── widgets/             # Reusable widgets
-    ├── buttons/
-    ├── inputs/
-    └── cards/
-```
-
-**Contents:**
-- Reusable buttons, inputs, cards
-- Common dialogs and modals
-- Shared animations
-- Utility functions
-
----
-
-### 🔌 **`service_locator.dart`** - Dependency Injection
-**Purpose:** Centralized dependency injection using GetIt
-
-**Structure:**
-```dart
-final sl = GetIt.instance;
-
-Future<void> initializeServiceLocator() async {
-  // Data Sources
-  sl.registerLazySingleton<AuthApiService>(...);
-  
-  // Repositories
-  sl.registerLazySingleton<AuthRepository>(...);
-  
-  // Use Cases
-  sl.registerSingleton<SignupUseCase>(...);
-  
-  // Providers
-  sl.registerFactory<ProductProvider>(...);
-}
-```
-
-**Registration Types:**
-- **Singleton:** Single instance throughout app lifecycle
-- **LazySingleton:** Created on first use
-- **Factory:** New instance each time
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-- Flutter SDK 3.0+
-- Dart 3.0+
-- Android Studio / VS Code
-- iOS Simulator / Android Emulator
-
-### Installation
-
-1. **Clone the repository:**
-   ```bash
-   git clone <repository-url>
-   cd mobile
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   flutter pub get
-   ```
-
-3. **Configure backend URL:**
-   Edit `lib/service_locator.dart`:
-   ```dart
-   const baseUrl = "https://your-backend-url.com/api/";
-   ```
-
-4. **Run the app:**
-   ```bash
-   flutter run
-   ```
-
----
-
-## 📱 Features
-
-- ✅ **Authentication** - Login, Signup, Password Reset
-- ✅ **Product Management** - View, search, update products
-- ✅ **Inventory Tracking** - Real-time stock monitoring
-- ✅ **Trend Analysis** - Market insights & predictions
-- ✅ **AI Assistant** - Conversational inventory help
-- ✅ **QR Scanner** - Quick product lookup
-- ✅ **Profile Management** - User settings
-
-
----
-
-## 🧪 Testing
-
-### Run Tests
 ```bash
+flutter doctor -v
+flutter devices
+```
+
+## Project Setup
+
+Run all Flutter commands from the `mobile` directory, where `pubspec.yaml` is
+located.
+
+```powershell
+cd C:\Users\Administrator\Desktop\StockWise\mobile
+flutter pub get
+```
+
+## Backend Configuration
+
+The API and media URLs are configured in `lib/service_locator.dart`:
+
+```dart
+const baseUrl = "https://your-backend-host/api/";
+const String mediaBaseUrl = "https://your-backend-host/media/";
+```
+
+For local development, start the backend from a separate terminal:
+
+```powershell
+cd C:\Users\Administrator\Desktop\StockWise\backend
+python manage.py runserver 0.0.0.0:8000
+```
+
+To make a laptop-hosted backend available to a physical Android device, use a
+reachable LAN address or an authenticated ngrok tunnel. Do not use
+`localhost` or `127.0.0.1` in the mobile app when the backend runs on the
+laptop.
+
+Example ngrok setup:
+
+```powershell
+& "$env:LOCALAPPDATA\ngrok\ngrok.exe" config add-authtoken YOUR_TOKEN
+& "$env:LOCALAPPDATA\ngrok\ngrok.exe" http 8000
+```
+
+Copy the HTTPS forwarding URL into `service_locator.dart`, including the
+trailing `/api/` and `/media/` paths. Keep Django and ngrok running while the
+app is in use. Never commit authentication tokens or private backend URLs.
+
+## Run the Application
+
+List available devices:
+
+```bash
+flutter devices
+```
+
+Run on a connected Android device:
+
+```bash
+flutter run -d 164632563D000174
+```
+
+Run on a named target:
+
+```bash
+flutter run -d android
+flutter run -d chrome
+flutter run -d windows
+```
+
+## Android Build
+
+Create a debug APK:
+
+```bash
+flutter build apk --debug
+```
+
+The APK is generated at:
+
+```text
+build/app/outputs/flutter-apk/app-debug.apk
+```
+
+Create a release APK or app bundle after configuring release signing:
+
+```bash
+flutter build apk --release
+flutter build appbundle --release
+```
+
+## Branding
+
+Branding assets are stored in `assets/vectors/`. The square cube logo is also
+available as `assets/icon.png` for native tooling.
+
+Launcher icons and native splash resources can be regenerated with:
+
+```bash
+flutter pub get
+dart run flutter_launcher_icons
+dart run flutter_native_splash:create
+```
+
+The in-app splash screen is implemented in
+`lib/presentation/splash/pages/splash.dart`.
+
+## Architecture
+
+```text
+lib/
+|-- common/                       Shared widgets and helpers
+|-- core/                         Theme, assets, errors, and base use cases
+|-- data/                         API services, models, and repositories
+|   |-- auth/
+|   |-- inventory/
+|   |-- product/
+|   |-- trends/
+|   `-- ai_assistant/
+|-- domain/                       Entities, contracts, and use cases
+|-- presentation/                 Pages, widgets, and state management
+|   |-- auth/
+|   |-- home/
+|   |-- inventory/
+|   |-- product/
+|   |-- trends/
+|   |-- Profile/
+|   |-- qr_scanner/
+|   `-- splash/
+|-- main.dart                     Application entry point
+`-- service_locator.dart          GetIt dependency registration
+```
+
+The dependency direction is:
+
+```text
+Presentation -> Domain <- Data
+```
+
+The domain layer defines repository contracts. The data layer implements those
+contracts and transforms API responses into domain entities. The presentation
+layer consumes use cases and updates the UI through Provider or BLoC.
+
+## Authentication and Profile Flow
+
+1. Login or registration returns access and refresh JWT tokens.
+2. Tokens are stored using `flutter_secure_storage`.
+3. Authenticated requests send the access token as a Bearer token.
+4. Profile edits use `PATCH /api/user/`.
+5. Profile-picture edits use multipart `PATCH /api/user/`.
+6. Password changes use `POST /api/users/change-password/`.
+7. Profile and Home reload user data after an update and display saved media.
+
+## API Endpoints Used
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| POST | `/api/register/` | Create an account |
+| POST | `/api/token/` | Obtain JWT tokens |
+| POST | `/api/token/refresh/` | Refresh an access token |
+| GET | `/api/user/` | Load the current user |
+| PATCH | `/api/user/` | Update profile data and picture |
+| POST | `/api/users/change-password/` | Change password |
+| GET | `/api/products/` | Load products |
+| GET | `/api/inventory/` | Load inventory |
+| GET | `/api/trends/` | Load market trends |
+| POST | `/api/ai/...` | Use AI assistant features |
+
+## Quality Checks
+
+Run static analysis and tests:
+
+```bash
+flutter analyze
 flutter test
 ```
 
-### Test Structure
-```
-test/
-├── domain/              # Domain layer tests
-├── data/                # Data layer tests
-└── presentation/        # Widget tests
+Format Dart files before review:
+
+```bash
+dart format lib test
 ```
 
----
+## Troubleshooting
 
-## 📦 Dependencies
+### No `pubspec.yaml` found
 
-Key packages:
-- `get_it` - Dependency injection
-- `dartz` - Functional programming (Either, Option)
-- `provider` - State management
-- `http` / `dio` - HTTP client
-- `flutter_secure_storage` - Secure token storage
-- `qr_code_scanner` - QR scanning
+The command was run outside the Flutter project root. Change to:
 
----
-
-## 🏛️ Clean Architecture Benefits
-
-### ✅ **Separation of Concerns**
-- Each layer has a single responsibility
-- Easy to understand and maintain
-
-### ✅ **Testability**
-- Domain layer is pure Dart (no Flutter dependencies)
-- Easy to write unit tests
-- Mock dependencies easily
-
-### ✅ **Flexibility**
-- Swap data sources (API → Local DB)
-- Change UI framework without affecting business logic
-- Replace state management solution
-
-### ✅ **Scalability**
-- Add new features without breaking existing code
-- Clear structure for team collaboration
-
-### ✅ **Maintainability**
-- Changes in one layer don't affect others
-- Easy to locate and fix bugs
-
----
-
-## 📐 Architecture Diagram
-
-```
-┌─────────────────────────────────────────┐
-│         Presentation Layer              │
-│  (UI, Widgets, State Management)        │
-│  - Pages, Widgets, Providers            │
-└──────────────┬──────────────────────────┘
-               │ Uses
-               ▼
-┌─────────────────────────────────────────┐
-│          Domain Layer                   │
-│     (Business Logic - Pure Dart)        │
-│  - Entities, Use Cases, Repositories    │
-└──────────────┬──────────────────────────┘
-               │ Implements
-               ▼
-┌─────────────────────────────────────────┐
-│           Data Layer                    │
-│  (API, Models, Repository Impl)         │
-│  - Data Sources, Models, Repositories   │
-└─────────────────────────────────────────┘
+```text
+C:\Users\Administrator\Desktop\StockWise\mobile
 ```
 
-**Dependency Rule:** Dependencies point **INWARD**
-- Presentation → Domain ← Data
-- Domain has NO dependencies on outer layers
+### Windows Visual Studio toolchain error
 
----
+Install the Visual Studio **Desktop development with C++** workload, including
+MSVC build tools, CMake tools, and a Windows SDK. Alternatively, run on an
+Android device or Chrome.
 
-## 🎯 Best Practices Followed
+### Mobile cannot connect to the backend
 
-1. ✅ **Single Responsibility Principle** - Each class has one job
-2. ✅ **Dependency Inversion** - Depend on abstractions, not concretions
-3. ✅ **Interface Segregation** - Small, focused interfaces
-4. ✅ **Open/Closed Principle** - Open for extension, closed for modification
-5. ✅ **DRY (Don't Repeat Yourself)** - Reusable components in `common/`
+Confirm Django is running, verify the configured URL, and make sure the phone
+can reach the host. A physical Android phone cannot reach the laptop through
+`localhost`; use the laptop LAN IP or ngrok.
 
----
+### Images do not appear
 
-## 🔄 Data Flow Example
+Confirm the backend serves `/media/`, the configured `mediaBaseUrl` is current,
+and the API returns the expected image path. Temporary ngrok URLs change when a
+tunnel restarts.
 
-**User Login Flow:**
-```
-1. User enters credentials (Presentation)
-   ↓
-2. LoginPage calls SigninUseCase (Domain)
-   ↓
-3. SigninUseCase calls AuthRepository interface (Domain)
-   ↓
-4. AuthRepositoryImpl makes API call (Data)
-   ↓
-5. API returns JSON → Model → Entity
-   ↓
-6. Entity returned to Presentation
-   ↓
-7. UI updates with user data
+### Android build asset or Gradle lock errors
+
+Stop duplicate Flutter or Gradle runs, then clean generated output:
+
+```powershell
+cd C:\Users\Administrator\Desktop\StockWise\mobile
+.\android\gradlew.bat --stop
+flutter clean
+flutter pub get
+flutter build apk --debug
 ```
 
----
+## Repository Layout
 
-## 🐛 Debugging
+This repository also contains:
 
-### Common Issues
+- `backend/`: Django REST API and database-backed services
+- `mobile/`: this Flutter application
+- `web/`: web frontend
 
-**1. Dependency Injection Errors**
-```dart
-// Ensure service locator is initialized in main.dart
-await initializeServiceLocator();
-```
+See the backend README for server setup, database configuration, migrations,
+email settings, and API administration.
 
-**2. API Connection Issues**
-- Check `baseUrl` in `service_locator.dart`
-- Verify backend is running
-- Check network permissions in `AndroidManifest.xml` / `Info.plist`
+## Security Notes
 
-**3. Token Expiration**
-- Implement token refresh logic in data layer
-- Handle 401 errors gracefully
+- Do not commit ngrok tokens, JWTs, passwords, or `.env` files.
+- Use HTTPS for non-local environments.
+- Configure restricted `ALLOWED_HOSTS` and production CORS settings before
+  deployment.
+- Configure Android and iOS release signing before publishing.
+- Replace development tunnel URLs with a stable production API URL for release
+  builds.
 
----
+## License
 
-## 📈 Future Improvements
-
-- [ ] Add unit tests for all layers
-- [ ] Implement offline-first architecture
-- [ ] Add integration tests
-- [ ] Improve error handling with custom Failure classes
-- [ ] Add analytics and crash reporting
-- [ ] Implement push notifications
-
----
-
-
-
-
-
-StockWise Development Team
-
----
-
-## 📚 Resources
-
-- [Clean Architecture by Uncle Bob](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
-- [Flutter Clean Architecture Guide](https://resocoder.com/flutter-clean-architecture-tdd/)
-- [GetIt Documentation](https://pub.dev/packages/get_it)
-- [Provider Documentation](https://pub.dev/packages/provider)
+This project is private software. Add the project license here before public
+distribution.

@@ -1,8 +1,11 @@
 import axios from "axios";
 
+// Get the base URL from Vite's environment variables
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000/api/";
+
 // ✅ Use your existing backend (no /v1)
 const api = axios.create({
-  baseURL: "http://127.0.0.1:8000/api/",
+  baseURL: API_BASE_URL,
   withCredentials: true,
 });
 
@@ -28,7 +31,8 @@ api.interceptors.response.use(
         const refreshToken = localStorage.getItem("refresh");
         if (!refreshToken) throw new Error("No refresh token found");
 
-        const res = await axios.post("http://127.0.0.1:8000/api/token/refresh/", {
+        // ✅ Use the dynamic base URL here too
+        const res = await axios.post(`${API_BASE_URL}token/refresh/`, {
           refresh: refreshToken,
         });
 

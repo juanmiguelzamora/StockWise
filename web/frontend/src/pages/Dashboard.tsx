@@ -22,6 +22,7 @@ export default function ProtectedDashboard() {
     products,
     filtered,
     loading,
+    productsLoaded,
     error,
     totalStock,
     totalIn,
@@ -41,7 +42,7 @@ export default function ProtectedDashboard() {
   };
 
   // ================== Loading/Error States ==================
-  if (loading) {
+  if (loading || !productsLoaded) {
     return (
       <div className="h-screen flex items-center justify-center bg-white">
         <LoadingSpinner />

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/presentation/inventory/provider/inventory_provider.dart';
+import 'package:mobile/service_locator.dart';
 import 'package:provider/provider.dart';
 
 class InventoryHistoryPage extends StatefulWidget {
@@ -186,6 +187,12 @@ class _InventoryHistoryPageState extends State<InventoryHistoryPage> {
     final isPositive = delta > 0;
     final changeText = isPositive ? '+${delta.abs()}' : '-${delta.abs()}';
     final changeColor = isPositive ? Colors.green : Colors.red;
+    final imagePath = item.product?.imageUrl ?? '';
+    final imageUrl = imagePath.isEmpty
+      ? null
+      : imagePath.startsWith('http')
+        ? imagePath
+        : '$mediaBaseUrl$imagePath';
 
     final icon = item.product?.name?.toLowerCase().contains('headphones') == true
         ? Icons.headset
@@ -217,7 +224,21 @@ class _InventoryHistoryPageState extends State<InventoryHistoryPage> {
               shape: BoxShape.circle,
               border: Border.all(color: Colors.grey.shade300),
             ),
-            child: Icon(icon, color: Colors.blueAccent, size: 22),
+            child: imageUrl == null
+                ? Icon(icon, color: Colors.blueAccent, size: 22)
+                : ClipOval(
+                    child: Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      width: 46,
+                      height: 46,
+                      errorBuilder: (_, __, ___) => Icon(
+                        icon,
+                        color: Colors.blueAccent,
+                        size: 22,
+                      ),
+                    ),
+                  ),
           ),
           const SizedBox(width: 12),
           Expanded(

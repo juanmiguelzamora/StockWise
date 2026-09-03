@@ -38,6 +38,32 @@ class AuthRepositoryImpl extends AuthRepository {
       (data) => Right(UserModel.fromMap(data).toEntity()),
     );
   }
+
+  @override
+  Future<Either> updateProfile({
+    required String firstName,
+    required String lastName,
+    required String email,
+    String? profilePicturePath,
+  }) async {
+    return await _service.updateProfile(
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+      profilePicturePath: profilePicturePath,
+    );
+  }
+
+  @override
+  Future<Either> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    return await _service.changePassword(
+      oldPassword: oldPassword,
+      newPassword: newPassword,
+    );
+  }
   
   @override
   Future<Either> logout() async {

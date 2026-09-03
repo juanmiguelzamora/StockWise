@@ -1,13 +1,7 @@
-export type HistoryItem = {
-  id: number;
-  product_name: string;
-  sku: string;
-  image: string;
-  category?: string;
-  units_sold: number;
-  date: string;
-  change: number;
-};
+import type { HistoryItem } from "../../types/history";
+import HistoryItemRow from "./HistoryItemRow";
+
+export type { HistoryItem } from "../../types/history";
 
 export default function HistoryPanelDesktop({ items }: { items: HistoryItem[] }) {
   return (
@@ -16,26 +10,7 @@ export default function HistoryPanelDesktop({ items }: { items: HistoryItem[] })
       <ul className="space-y-4">
         {items.length > 0 ? (
           items.map((item) => (
-            <li key={`${item.id}-${item.date}`} className="flex justify-between items-center text-sm">
-              <div className="flex items-center gap-3">
-                {item.image && (
-                  <img
-                    src={item.image}
-                    alt={item.product_name}
-                    className="w-10 h-10 object-cover rounded"
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).style.display = "none";
-                    }}
-                  />
-                )}
-                <div>
-                  <span className="text-gray-700 font-medium block">{item.product_name}</span>
-                </div>
-              </div>
-              <span className={`font-semibold ${item.change < 0 ? "text-red-500" : "text-green-500"}`}>
-                {item.change > 0 ? `+${item.change}` : item.change}
-              </span>
-            </li>
+            <HistoryItemRow key={`${item.id}-${item.date}`} item={item} />
           ))
         ) : (
           <li className="text-center text-gray-500 py-8">No history items available.</li>

@@ -6,12 +6,14 @@ class UserModel {
   final String email;
   final String firstName;
   final String lastName;
+  final String? profilePicture;
 
   UserModel({
     required this.userId,
     required this.email,
     required this.firstName,
     required this.lastName,
+    this.profilePicture,
   });
 
   Map<String, dynamic> toMap() {
@@ -19,7 +21,8 @@ class UserModel {
       'userId': userId,
       'firstName': firstName,
       'lastName': lastName,
-      'email': email,
+        'email': email,
+        'profilePicture': profilePicture,
     };
   }
 
@@ -29,6 +32,7 @@ class UserModel {
       email: map['email'] ?? '',
       firstName: map['first_name'] ?? '',  // Django uses underscore
       lastName: map['last_name'] ?? '',
+        profilePicture: map['profile_picture'] as String?,
     );
   }
   
@@ -43,7 +47,8 @@ extension UserXModel on UserModel {
       userId: userId,
       email: email,
       firstName: firstName,
-      lastName: lastName, 
+        lastName: lastName,
+        profilePicture: profilePicture,
     );
   }
 }

@@ -3,13 +3,14 @@ from rest_framework.response import Response
 from django.db.models import Sum, Avg, Value, DecimalField, IntegerField
 from django.db.models.functions import Coalesce
 
-from .models import Product, Inventory, SalesHistory
+from .models import Product, Inventory, SalesHistory, StockMovement
 from .serializers import (
     ProductSerializer,
     ProductQuantityUpdateSerializer,
     InventorySerializer,
     InventorySummarySerializer,
     SalesHistorySerializer,
+    StockMovementSerializer,
 )
 
 
@@ -88,5 +89,5 @@ class StockHistoryViewSet(viewsets.ReadOnlyModelViewSet):
     Provides read-only access to stock/sales history.
     GET /api/stock/history/
     """
-    queryset = SalesHistory.objects.select_related("product").order_by("-date")[:50]
-    serializer_class = SalesHistorySerializer
+    queryset = StockMovement.objects.select_related("product").order_by("-created_at", "-id")[:50]
+    serializer_class = StockMovementSerializer

@@ -5,6 +5,7 @@ import 'package:mobile/domain/auth/entity/user.dart';
 import 'package:mobile/presentation/home/bloc/user_info_display_cubit.dart';
 import 'package:mobile/presentation/home/bloc/user_info_display_state.dart';
 import 'package:mobile/presentation/mappers/user_presentation.dart';
+import 'package:mobile/service_locator.dart';
 
 class Header extends StatelessWidget {
   const Header({super.key});
@@ -70,11 +71,16 @@ class Header extends StatelessWidget {
         CircleAvatar(
           radius: 24,
           backgroundColor: AppColors.primary.withAlpha(51),
-          child: Icon(
-            Icons.person,
-            size: 28,
-            color: AppColors.primary,
-          ),
+          backgroundImage: user.profilePicture == null
+              ? null
+              : NetworkImage(_profileImageUrl(user.profilePicture!)),
+          child: user.profilePicture == null
+              ? const Icon(
+                  Icons.person,
+                  size: 28,
+                  color: AppColors.primary,
+                )
+              : null,
         ),
 
         const SizedBox(width: 12),
@@ -114,6 +120,17 @@ class Header extends StatelessWidget {
         ), */
       ],
     );
+  }
+
+  String _profileImageUrl(String path) {
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+    if (path.startsWith('/media/')) {
+      final serverUrl = mediaBaseUrl.substring(0, mediaBaseUrl.length - 7);
+      return '$serverUrl${path.substring(1)}';
+    }
+    return '$mediaBaseUrl$path';
   }
 }
 
