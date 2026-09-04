@@ -1,6 +1,6 @@
 # StockWise
 
-StockWise is a full-stack inventory management platform with web and mobile clients. It combines product and stock tracking, market trends, QR/barcode scanning, profile management, and AI-assisted inventory workflows.
+StockWise is a smart and scalable inventory management system designed to help businesses effectively monitor, control, and optimize their stock levels. The system addresses common inventory issues such as overstocking, stockouts, and inefficient manual tracking by providing a centralized, automated, and real-time platform for stock management.
 
 ## Repository Overview
 
