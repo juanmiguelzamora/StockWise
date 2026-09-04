@@ -43,7 +43,7 @@ const Login: React.FC = () => {
       const errorList: string[] = [];
 
       if (!err.response) {
-        errorList.push("❌ Unable to connect to backend. Please check your server.");
+        errorList.push("Invalid Credentials");
       } else if (err.response.status === 401) {
         errorList.push("⚠️ Invalid email or password.");
       } else {

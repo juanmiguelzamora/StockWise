@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import api from "../services/api";
+import { BACKEND_ORIGIN } from "../config/env";
 
 export interface BackendProduct {
   id: number;
@@ -48,7 +49,7 @@ export function useDashboardLogic() {
 
   const fallbackHistory = useMemo<HistoryItem[]>(() => {
     if (!products || products.length === 0) return [];
-    const base = (import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
+    const base = BACKEND_ORIGIN;
     const list = products.map((p) => {
       const d = p.updated_at || new Date().toISOString();
       let image = "/placeholder.png";
@@ -113,7 +114,7 @@ export function useDashboardLogic() {
         const mappedHistory: HistoryItem[] = rawHistory.map((item) => {
           const timestamp = item.timestamp || item.updated_at || item.date || new Date().toISOString();
 
-          const base = (import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
+          const base = BACKEND_ORIGIN;
           const rawImg: string | undefined = item.image || item.image_url;
           let image = "/placeholder.png";
           if (typeof rawImg === "string" && rawImg.trim()) {

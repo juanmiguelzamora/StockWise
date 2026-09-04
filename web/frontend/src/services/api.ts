@@ -1,7 +1,5 @@
 import axios from "axios";
-
-// Get the base URL from Vite's environment variables
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000/api/";
+import { API_BASE_URL } from "../config/env";
 
 // ✅ Use your existing backend (no /v1)
 const api = axios.create({

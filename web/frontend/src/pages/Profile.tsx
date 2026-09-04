@@ -4,6 +4,7 @@ import Navbar from "../layout/navbar";
 import api from "../services/api";
 import Cropper from "react-easy-crop";
 import getCroppedImg from "./cropImage";
+import { resolveMediaUrl } from "../config/env";
 
 // ---- Types ----
 interface User {
@@ -159,11 +160,7 @@ export default function Profile() {
           <div className="w-20 aspect-square rounded-full border border-gray-300 flex items-center justify-center overflow-hidden">
             {user?.profile_picture ? (
               <img
-                src={
-                  user.profile_picture?.startsWith("http")
-                    ? user.profile_picture
-                    : `${import.meta.env.VITE_API_URL}${user.profile_picture}`
-                }
+                src={resolveMediaUrl(user.profile_picture) ?? undefined}
                 alt="Profile"
                 className="w-full h-full object-cover"
               />

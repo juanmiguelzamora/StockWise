@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
 import { useInventory } from "../contexts/InventoryContext";
+import { resolveMediaUrl } from "../config/env";
 
 export interface InventoryItem {
   inventory_id: number;
@@ -63,9 +64,7 @@ export function useInventoryLogic(onStockChange?: (item: HistoryItem) => void): 
           sku: item.product.sku ?? null,
           category: item.product.category ?? null,
           quantity: item.product.inventory?.total_stock ?? item.total_stock ?? 0,
-          image: item.product.image_url
-            ? `${import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000"}/media/${item.product.image_url}`
-            : null,
+          image: resolveMediaUrl(item.product.image_url),
           stock_status: item.product.inventory?.stock_status ?? "unknown",
         }));
 
